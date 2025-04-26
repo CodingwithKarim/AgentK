@@ -1,4 +1,4 @@
-import { Session } from "../types/types";
+import { Session } from "../utils/types/types";
 
 export const fetchSessions = async (): Promise<Session[]> => {
     try {

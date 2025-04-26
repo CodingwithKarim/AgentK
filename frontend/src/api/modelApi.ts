@@ -1,4 +1,4 @@
-import { Model } from "../types/types";
+import { Model } from "../utils/types/types";
 import { preferredOrder } from "../utils/constants";
 
 export const fetchModels = async (): Promise<Model[]> => {

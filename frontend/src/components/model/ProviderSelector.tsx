@@ -1,5 +1,5 @@
 import React from "react";
-import { Provider } from "../../types/types";
+import { Provider } from "../../utils/types/types";
 import { Layers } from "react-feather";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headlessui/react";
 import { ChevronUpDownIcon } from "@heroicons/react/20/solid";

@@ -1,5 +1,5 @@
 import React from "react";
-import { ChatMessage as ChatMessageType } from "../../types/types";
+import { ChatMessage as ChatMessageType } from "../../utils/types/types";
 
 type ChatMessageProps = {
   message: ChatMessageType;

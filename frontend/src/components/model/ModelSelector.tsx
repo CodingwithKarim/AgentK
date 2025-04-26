@@ -1,5 +1,5 @@
 import React from "react";
-import { Model } from "../../types/types"
+import { Model } from "../../utils/types/types"
 import { Cpu } from "react-feather";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headlessui/react";
 import { ChevronUpDownIcon } from "@heroicons/react/20/solid";

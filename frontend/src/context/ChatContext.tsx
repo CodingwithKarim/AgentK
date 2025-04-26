@@ -4,7 +4,7 @@ import {
   Session, 
   Model, 
   Provider
-} from "../types/types";
+} from "../utils/types/types";
 import { 
   fetchSessions, 
   createSession, 
@@ -98,6 +98,17 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .catch(console.error);
   }, []);
 
+  useEffect(() => {
+    if (!selectedSession) return;
+    
+    setSelectedProvider("");
+    setSharedContext(false);
+    setChatMessages([]);
+
+    setSelectedModel("")
+    
+  }, [selectedSession]);
+
   // Filter models when provider changes
   useEffect(() => {
     const newList = selectedProvider
@@ -113,8 +124,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Fetch chat history when session or model changes
   useEffect(() => {
     if (!sessionActive || !selectedModel) return;
-
-    setChatMessages([]);
 
     fetchChatHistory(selectedSession, selectedModel, sharedContext)
       .then(setChatMessages)

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/CodingWithKarim/AgentK/config"
+	"github.com/CodingWithKarim/AgentK/internal/config"
 	"github.com/CodingWithKarim/AgentK/internal/database"
 	"github.com/CodingWithKarim/AgentK/internal/services/ai"
 	"github.com/CodingWithKarim/AgentK/internal/utils"

@@ -1,4 +1,4 @@
-import { ChatMessage } from "../types/types";
+import { ChatMessage } from "../utils/types/types";
 
 export const fetchChatHistory = async (
   sessionID: string,

@@ -1,5 +1,5 @@
 import React from "react"
-import { SessionSelectorProps } from "../../types/types"
+import { SessionSelectorProps } from "../../utils/types/types"
 
 export const ChatSelector: React.FC<SessionSelectorProps> = ({
     sessions,

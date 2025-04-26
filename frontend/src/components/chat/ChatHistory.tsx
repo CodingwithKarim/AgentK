@@ -1,8 +1,7 @@
-import React, { useRef } from "react";
-import { ChatMessage as ChatMessageType } from "../../types/types";
+import React, { RefObject, useEffect, useRef } from "react";
+import { ChatMessage as ChatMessageType } from "../../utils/types/types";
 import { ChatMessage } from "./ChatMessage";
 import { LoadingIndicator } from "./LoadingIndicator";
-import { useChatScroll } from "../../hooks/useChatScroll";
 
 type ChatHistoryProps = {
   messages: ChatMessageType[];
@@ -31,4 +30,16 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
       </div>
     </div>
   );
+};
+
+export const useChatScroll = (
+  chatHistoryRef: RefObject<HTMLDivElement | null>,
+  chatMessages: ChatMessageType[]
+): void => {
+  useEffect(() => {
+    const c = chatHistoryRef.current;
+    if (!c) return;
+    const last = c.children[c.children.length - 1] as HTMLElement;
+    last?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [chatMessages, chatHistoryRef]);
 };
