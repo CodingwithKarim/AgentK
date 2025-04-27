@@ -1,0 +1,262 @@
+{
+    "Providers": {
+      "OpenAI":    { "apiKey": "ENTER API KEY HERE" },
+      "Anthropic": { "apiKey": "ENTER API KEY HERE" },
+      "Groq":      { "apiKey": "ENTER API KEY HERE" },
+      "Perplexity": { "apiKey": "ENTER API KEY HERE" },
+      "Cohere":    { "apiKey": "ENTER API KEY HERE" },
+      "Google":    { "apiKey": "ENTER API KEY HERE" },
+      "HuggingFace": { "apiKey": "ENTER API KEY HERE" }
+    },
+
+    "Models": {
+      "o3-2025-04-16": {
+        "id": "o3-2025-04-16",
+        "name": "o3",
+        "provider": "OpenAI",
+        "endpoint": "https://api.openai.com/v1/chat/completions",
+        "contextSize": 200000,
+        "maxCompletionTokens": 100000
+      },
+      "gpt-4o-2024-08-06": {
+        "id": "gpt-4o-2024-08-06",
+        "name": "GPT-4o",
+        "provider": "OpenAI",
+        "endpoint": "https://api.openai.com/v1/chat/completions",
+        "contextSize": 128000,
+        "maxCompletionTokens": 16384
+      },
+      "gpt-4.1-nano-2025-04-14": {
+        "id": "gpt-4.1-nano-2025-04-14",
+        "name": "GPT-4.1 Nano",
+        "provider": "OpenAI",
+        "endpoint": "https://api.openai.com/v1/chat/completions",
+        "contextSize": 1000000,
+        "maxCompletionTokens": 32768
+      },
+      "gpt-4.1-mini-2025-04-14": {
+        "id": "gpt-4.1-mini-2025-04-14",
+        "name": "GPT-4.1 Mini",
+        "provider": "OpenAI",
+        "endpoint": "https://api.openai.com/v1/chat/completions",
+        "contextSize": 300000,
+        "maxCompletionTokens": 32768
+      },
+      "claude-3-5-haiku-20241022": {
+        "id": "claude-3-5-haiku-20241022",
+        "name": "Claude 3.5 Haiku",
+        "provider": "Anthropic",
+        "endpoint": "https://api.anthropic.com/v1/messages",
+        "contextSize": 200000,
+        "maxCompletionTokens": 8192
+      },
+      "claude-3-7-sonnet-20250219": {
+        "id": "claude-3-7-sonnet-20250219",
+        "name": "Claude 3.7 Sonnet",
+        "provider": "Anthropic",
+        "endpoint": "https://api.anthropic.com/v1/messages",
+        "contextSize": 200000,
+        "maxCompletionTokens": 64000
+      },
+      "claude-3-5-sonnet-latest": {
+        "id": "claude-3-5-sonnet-latest",
+        "name": "Claude 3.5 Sonnet v2",
+        "provider": "Anthropic",
+        "endpoint": "https://api.anthropic.com/v1/messages",
+        "contextSize": 200000,
+        "maxCompletionTokens": 8192
+      },
+      "claude-3-opus-latest": {
+        "id": "claude-3-opus-latest",
+        "name": "Claude 3 Opus",
+        "provider": "Anthropic",
+        "endpoint": "https://api.anthropic.com/v1/messages",
+        "contextSize": 200000,
+        "maxCompletionTokens": 4096
+      },
+      "llama-3.1-8b-instant": {
+        "id": "llama-3.1-8b-instant",
+        "name": "LLaMA 3.1",
+        "provider": "Groq",
+        "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+        "contextSize": 128000,
+        "maxCompletionTokens": 8192
+      },
+      "llama3-70b-8192": {
+        "id": "llama3-70b-8192",
+        "name": "LLaMA 3",
+        "provider": "Groq",
+        "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+        "contextSize": 8192,
+        "maxCompletionTokens": 2000 
+      },
+      "llama-3.3-70b-versatile": {
+        "id": "llama-3.3-70b-versatile",
+        "name": "LLaMA 3.3",
+        "provider": "Groq",
+        "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+        "contextSize": 128000,
+        "maxCompletionTokens": 32768
+      },
+      "mistral-saba-24b": {
+        "id": "mistral-saba-24b",
+        "name": "Mistral-Saba",
+        "provider": "Groq",
+        "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+        "contextSize": 32000,
+        "maxCompletionTokens": 8192
+      },
+      "qwen-qwq-32b": {
+        "id": "qwen-qwq-32b",
+        "name": "Qwen-Qwq",
+        "provider": "Groq",
+        "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+        "contextSize": 128000,
+        "maxCompletionTokens": 8192
+      },
+      "gemma2-9b-it": {
+        "id": "gemma2-9b-it",
+        "name": "Gemma 2",
+        "provider": "Groq",
+        "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+        "contextSize": 8192,
+        "maxCompletionTokens": 2000
+      },
+      "sonar": {
+        "id": "sonar",
+        "name": "Sonar",
+        "provider": "Perplexity",
+        "endpoint": "https://api.perplexity.ai/chat/completions",
+        "contextSize": 128000,
+        "maxCompletionTokens": 8192
+      },
+      "sonar-pro": {
+        "id": "sonar-pro",
+        "name": "Sonar-Pro",
+        "provider": "Perplexity",
+        "endpoint": "https://api.perplexity.ai/chat/completions",
+        "contextSize": 200000,
+        "maxCompletionTokens": 8192
+      },
+      "sonar-reasoning": {
+        "id": "sonar-reasoning",
+        "name": "Sonar Reasoning",
+        "provider": "Perplexity",
+        "endpoint": "https://api.perplexity.ai/chat/completions",
+        "contextSize": 128000,
+        "maxCompletionTokens": 8192
+      },
+      "r1-1776": {
+        "id": "r1-1776",
+        "name": "R1-1776",
+        "provider": "Perplexity",
+        "endpoint": "https://api.perplexity.ai/chat/completions",
+        "contextSize": 128000,
+        "maxCompletionTokens": 8192
+      },
+      "command-r": {
+        "id": "command-r",
+        "name": "Command-R",
+        "provider": "Cohere",
+        "endpoint": "https://api.cohere.com/v2/chat",
+        "contextSize": 128000,
+        "maxCompletionTokens": 4096
+      },
+      "command-r-plus": {
+        "id": "command-r-plus",
+        "name": "Command-R+",
+        "provider": "Cohere",
+        "endpoint": "https://api.cohere.com/v2/chat",
+        "contextSize": 128000,
+        "maxCompletionTokens": 4096
+      },
+      "c4ai-aya-expanse-32b": {
+        "id": "c4ai-aya-expanse-32b",
+        "name": "C4AI Aya Expanse",
+        "provider": "Cohere",
+        "endpoint": "https://api.cohere.com/v2/chat",
+        "contextSize": 128000,
+        "maxCompletionTokens": 4096
+      },
+      "c4ai-aya-vision-32b": {
+        "id": "c4ai-aya-vision-32b",
+        "name": "C4AI Aya Vision",
+        "provider": "Cohere",
+        "endpoint": "https://api.cohere.com/v2/chat",
+        "contextSize": 16000,
+        "maxCompletionTokens": 4096
+      },
+      "gemini-2.0-flash": {
+        "id": "gemini-2.0-flash",
+        "name": "Gemini 2.0 Flash",
+        "provider": "Google",
+        "endpoint": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+        "contextSize": 1000000,
+        "maxCompletionTokens": 8192
+      },
+      "gemini-2.0-flash-lite": {
+        "id": "gemini-2.0-flash-lite",
+        "name": "Gemini 2.0 Flash lite",
+        "provider": "Google",
+        "endpoint": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+        "contextSize": 1000000,
+        "maxCompletionTokens": 8192
+      },
+      "gemini-2.5-pro-exp-03-25": {
+        "id": "gemini-2.5-pro-exp-03-25",
+        "name": "Gemini 2.5 Pro Preview",
+        "provider": "Google",
+        "endpoint": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+        "contextSize": 1000000,
+        "maxCompletionTokens": 65536
+      },
+      "gemini-1.5-pro-latest": {
+        "id": "gemini-1.5-pro-latest",
+        "name": "Gemini 1.5 Pro",
+        "provider": "Google",
+        "endpoint": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+        "contextSize": 1000000,
+        "maxCompletionTokens": 8192
+      },
+      "microsoft/phi-4": {
+        "id": "microsoft/phi-4",
+        "name": "Microsoft Phi-4",
+        "provider": "HuggingFace",
+        "endpoint": "https://router.huggingface.co/nebius/v1/chat/completions",
+        "contextSize": 16000,
+        "maxCompletionTokens": 4096
+      },
+      "accounts/fireworks/models/deepseek-v3-0324": {
+        "id": "accounts/fireworks/models/deepseek-v3-0324",
+        "name": "Deepseek-V3",
+        "provider": "HuggingFace",
+        "endpoint": "https://router.huggingface.co/fireworks-ai/inference/v1/chat/completions",
+        "contextSize": 128000,
+        "maxCompletionTokens": 4096
+      },
+      "google/gemma-3-27b-it-fast": {
+        "id": "google/gemma-3-27b-it-fast",
+        "name": "Gemma 3",
+        "provider": "HuggingFace",
+        "endpoint": "https://router.huggingface.co/nebius/v1/chat/completions",
+        "contextSize": 8192,
+        "maxCompletionTokens": 2000
+      },
+      "NousResearch/Hermes-3-Llama-3.1-8B": {
+        "id": "NousResearch/Hermes-3-Llama-3.1-8B",
+        "name": "Hermes-3",
+        "provider": "HuggingFace",
+        "endpoint": "https://router.huggingface.co/hf-inference/models/NousResearch/Hermes-3-Llama-3.1-8B/v1/chat/completions",
+        "contextSize": 16000,
+        "maxCompletionTokens": 4096
+      },
+      "deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct-fast": {
+        "id": "deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct-fast",
+        "name": "DeepSeek Coder-V2",
+        "provider": "HuggingFace",
+        "endpoint": "https://router.huggingface.co/nebius/v1/chat/completions",
+        "contextSize": 128000,
+        "maxCompletionTokens": 4096
+      }
+    }
+  }

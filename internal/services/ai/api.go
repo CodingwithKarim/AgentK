@@ -4,46 +4,45 @@ import (
 	"github.com/CodingWithKarim/AgentK/internal/utils/types"
 )
 
-func CallOpenAI(model string, modelConfig *types.ModelConfig, messages []types.APIMessage) (string, error) {
+func CallOpenAI(model string, modelConfig *types.ModelConfig, messages []types.APIMessage, maxTokens int) (string, error) {
 	// Create API client
 	client := NewOpenAIClient(modelConfig)
 
 	// Create request payload
-	payload := types.OpenAIRequest{
-		Model:    model,
-		Messages: messages,
+	payload := types.ChatRequestPayload{
+		Model:     model,
+		Messages:  messages,
+		MaxTokens: maxTokens,
 	}
 
 	// Send request and return response
 	return client.SendRequest(payload, ExtractOpenAIResponseText)
 }
 
-func CallClaude(model string, modelConfig *types.ModelConfig, messages []types.APIMessage) (string, error) {
+func CallClaude(model string, modelConfig *types.ModelConfig, messages []types.APIMessage, maxTokens int) (string, error) {
 	// Create API client
 	client := NewClaudeClient(modelConfig)
 
 	// Create request payload
-	payload := types.ClaudeRequest{
+	payload := types.ChatRequestPayload{
 		Model:     model,
 		Messages:  messages,
-		MaxTokens: 1024,
+		MaxTokens: maxTokens,
 	}
 
 	// Send request and return response
 	return client.SendRequest(payload, ExtractClaudeResponseText)
 }
 
-func CallCohereV2(model string, modelConfig *types.ModelConfig, messages []types.APIMessage) (string, error) {
+func CallCohereV2(model string, modelConfig *types.ModelConfig, messages []types.APIMessage, maxTokens int) (string, error) {
 	// Create API client
 	client := NewCohereClient(modelConfig)
 
 	// Create request payload
-	payload := struct {
-		Model    string             `json:"model"`
-		Messages []types.APIMessage `json:"messages"`
-	}{
-		Model:    model,
-		Messages: messages,
+	payload := types.ChatRequestPayload{
+		Model:     model,
+		Messages:  messages,
+		MaxTokens: maxTokens,
 	}
 
 	// Send request and return response

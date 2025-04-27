@@ -28,15 +28,14 @@ type APIMessage struct {
 }
 
 type ModelConfig struct {
-	ID          string
-	Name        string
-	Provider    Provider
-	Endpoint    string
-	APIKeyEnv   string
-	APIKey      string
-	ContextSize int
+	ID                  string
+	Name                string
+	Provider            Provider
+	Endpoint            string
+	APIKeyEnv           string
+	APIKey              string
+	ContextSize         int
+	MaxCompletionTokens int `json:"maxCompletionTokens,omitempty"`
 }
 
 type Provider string
-
-type ResponseExtractor func([]byte) (string, error)

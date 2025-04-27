@@ -40,3 +40,9 @@
 .read-the-docs {
   color: #888;
 }
+
+.swal2-confirm:focus,
+.swal2-cancel:focus {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;  
+}

@@ -19,13 +19,8 @@ type ChatRequest struct {
 	Message string `json:"message"`
 }
 
-type ClaudeRequest struct {
+type ChatRequestPayload struct {
 	Model     string       `json:"model"`
 	Messages  []APIMessage `json:"messages"`
-	MaxTokens int          `json:"max_tokens"`
-}
-
-type OpenAIRequest struct {
-	Model    string       `json:"model"`
-	Messages []APIMessage `json:"messages"`
+	MaxTokens int          `json:"max_tokens,omitempty"`
 }

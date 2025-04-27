@@ -28,7 +28,7 @@ func LoadConfig() error {
 	path := os.Getenv("AGENTK_JSON")
 
 	if path == "" {
-		path = "agentk.json" // Default to root project directory
+		path = "agentk_config.json" // Default to root project directory
 	}
 
 	// Read json config file
@@ -57,6 +57,10 @@ func LoadConfig() error {
 
 	// Inject API keys into each model based on the provider mapping
 	for id, mc := range ModelConfigRegistry {
+		if mc.MaxCompletionTokens == 0 {
+			mc.MaxCompletionTokens = 4096
+		}
+
 		providerKey := strings.ToLower(string(mc.Provider))
 
 		pc, ok := ProviderCreds[providerKey]

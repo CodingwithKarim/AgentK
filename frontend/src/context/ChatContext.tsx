@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import Swal from "sweetalert2";
 import { 
   ChatMessage, 
   Session, 
@@ -132,7 +133,32 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Operation handlers
   const handleNewChat = async () => {
-    const name = prompt("New chat name:");
+    const { value: name } = await Swal.fire<string>({
+      title: "Enter Chat Name",
+      input: "text",
+      inputPlaceholder: "Type a name…",
+      showCancelButton: true,
+      confirmButtonText: "Create",
+      cancelButtonText: "Cancel",
+      returnFocus: false,
+      customClass: {
+        popup:    "rounded-2xl p-6 shadow-lg bg-white",
+        title:    "text-xl font-semibold text-gray-800",
+        input:    "border border-gray-300 rounded-lg p-2 focus:ring-indigo-500 focus:border-indigo-500",
+        actions: "mt-6 flex justify-end space-x-3",
+        confirmButton: "px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white",
+        cancelButton:  "px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700",
+      },
+      width: 400,
+      backdrop: 'rgba(31, 41, 55, 0.6)',
+      buttonsStyling: false,  // tell SweetAlert2 not to inject its default button styles
+      inputValidator(value) {
+        if (!value || !value.trim()){
+          return "Chat name cannot be empty"
+        }
+      },
+    });
+
     if (!name?.trim()) return;
     
     try {
@@ -148,29 +174,116 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleDeleteSession = async () => {
-    if (!sessionActive || !confirm("Delete this chat?")) return;
-    
+    if (!sessionActive) return;
+  
+    // 1) fire the warning
+    const { isConfirmed } = await Swal.fire<string>({
+      title: "<span class='text-red-600'>Are you sure?</span>",
+      html: "<p class='text-gray-600'>Deleting this chat is permanent and cannot be undone.</p>",
+      text: "This action cannot be undone.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it",
+      cancelButtonText: "Cancel",
+      reverseButtons: true,
+      buttonsStyling: false,
+      width: 400,
+      customClass: {
+        popup: "rounded-2xl p-6 shadow-lg bg-white",
+        title: "text-lg font-semibold text-gray-800",
+        htmlContainer: "text-sm text-gray-600 mt-2",
+        confirmButton: "px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium",
+        cancelButton: "px-5 py-2.5 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium",
+        actions: "mt-6 flex justify-end space-x-4",
+      },
+      showClass: {
+        popup: "animate__animated animate__fadeInDown",
+      },
+      hideClass: {
+        popup: "animate__animated animate__fadeOutUp",
+      },
+      backdrop: 'rgba(31, 41, 55, 0.6)',
+    });
+  
+    // 2) if they clicked “Yes”
+    if (!isConfirmed) return;
+  
     try {
       const success = await deleteSession(selectedSession);
       if (success) {
+        // update your state
         setSessions((prev) => prev.filter((s) => s.id !== selectedSession));
         setSelectedSession("");
         setChatMessages([]);
+  
+        // optional success toast
+        await Swal.fire({
+          icon: "success",
+          title: "Deleted!",
+          text: "Your chat has been removed.",
+          timer: 1500,
+          showConfirmButton: false,
+        });
       }
     } catch (error) {
       console.error(error);
+      await Swal.fire({
+        icon: "error",
+        title: "Oops…",
+        text: "Something went wrong. Please try again.",
+      });
     }
   };
 
   const handleClearContext = async () => {
     if (!sessionActive || !selectedModel) return;
-    
+  
+    // Dynamically build the warning message
+    const warningMessage = sharedContext
+      ? "This will delete all messages associated with this session across all models."
+      : "This will delete messages for the selected model only.";
+  
+    const { isConfirmed } = await Swal.fire({
+      title: "Clear Chat Context?",
+      text: warningMessage,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, clear it",
+      cancelButtonText: "Cancel",
+      reverseButtons: true,
+      buttonsStyling: false,
+      customClass: {
+        popup: "rounded-2xl p-6 shadow-lg bg-white",
+        title: "text-lg font-semibold text-gray-800",
+        htmlContainer: "text-sm text-gray-600 mt-2",
+        confirmButton: "px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium",
+        cancelButton: "px-5 py-2.5 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium",
+        actions: "mt-6 flex justify-end space-x-4",
+      },
+      backdrop: 'rgba(31, 41, 55, 0.6)',
+    });
+  
+    if (!isConfirmed) return;
+  
     try {
       await clearChatContext(selectedSession, selectedModel, sharedContext);
       const messages = await fetchChatHistory(selectedSession, selectedModel, sharedContext);
       setChatMessages(messages);
+  
+      await Swal.fire({
+        icon: "success",
+        title: "Context Cleared!",
+        text: "Chat history has been reset.",
+        timer: 1500,
+        showConfirmButton: false,
+      });
     } catch (error) {
       console.error(error);
+      await Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to clear chat context. Please try again.",
+      });
     }
   };
 

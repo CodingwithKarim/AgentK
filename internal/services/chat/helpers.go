@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/CodingWithKarim/AgentK/internal/config"
 	"github.com/CodingWithKarim/AgentK/internal/database"
@@ -38,6 +39,7 @@ func getMessageHistory(request *types.ChatRequest) ([]types.Message, error) {
 	}
 
 	chatMessages, err := FetchChatHistory(historyRequest)
+
 	if err != nil {
 		log.Printf("❌ Error fetching chat history for session %q and model %q: %v",
 			request.SessionID, request.ModelID, err)
@@ -47,17 +49,17 @@ func getMessageHistory(request *types.ChatRequest) ([]types.Message, error) {
 	return chatMessages, nil
 }
 
-func callModelProvider(modelID string, modelConfig *types.ModelConfig, messages []types.APIMessage) (string, error) {
+func callModelProvider(modelID string, modelConfig *types.ModelConfig, messages []types.APIMessage, maxTokens int) (string, error) {
 	var reply string
 	var err error
 
 	switch modelConfig.Provider {
 	case utils.OPENAI, utils.GROQ, utils.PERPLEXITY, utils.GOOGLE, utils.HUGGINGFACE:
-		reply, err = ai.CallOpenAI(modelID, modelConfig, messages)
+		reply, err = ai.CallOpenAI(modelID, modelConfig, messages, maxTokens)
 	case utils.ANTHROPIC:
-		reply, err = ai.CallClaude(modelID, modelConfig, messages)
+		reply, err = ai.CallClaude(modelID, modelConfig, messages, maxTokens)
 	case utils.COHERE:
-		reply, err = ai.CallCohereV2(modelID, modelConfig, messages)
+		reply, err = ai.CallCohereV2(modelID, modelConfig, messages, maxTokens)
 	default:
 		log.Printf("No matching provider")
 		return "", fmt.Errorf("unsupported provider %q", modelConfig.Provider)
@@ -81,19 +83,57 @@ func saveMessagePair(sessionID, modelID, userMessage, assistantReply string) {
 	}
 }
 
-func toAPI(history []types.Message, userPrompt string) []types.APIMessage {
-	out := make([]types.APIMessage, 0, len(history)+1)
-	for _, m := range history {
-		out = append(out, types.APIMessage{
-			Role:    m.Role,
-			Content: m.Content,
+func toAPI(chatHistory []types.Message, userPrompt string, maxTokens int) ([]types.APIMessage, int) {
+	// Grab messages count
+	messagesCount := len(chatHistory)
+
+	// Init array size of
+	collectedMessages := make([]types.APIMessage, 0, messagesCount+1)
+
+	// Init token count with latest user message estimate
+	usedTokens := estimateTokenCount(userPrompt)
+
+	// Parse history newest => oldest, break at first overflow
+	for i := messagesCount - 1; i >= 0; i-- {
+		// Retrieve chat message
+		chatMessage := chatHistory[i]
+
+		// Estimate token count for chat message
+		tokenCnt := estimateTokenCount(chatMessage.Content)
+
+		// If message token count + previous chat tokens > maxTokens, break as we've hit context window size
+		if usedTokens+tokenCnt > maxTokens {
+			break
+		}
+
+		// Append chat message to collectedMessages array
+		collectedMessages = append(collectedMessages, types.APIMessage{
+			Role:    chatMessage.Role,
+			Content: chatMessage.Content,
 		})
+
+		// Increment previous tokens total with token count of latest message
+		usedTokens += tokenCnt
 	}
-	out = append(out, types.APIMessage{
+
+	// Reverse in-place with two pointer iteration so order is restored
+	// Two pointer iteration with swaps on each step
+	for i, j := 0, len(collectedMessages)-1; i < j; i, j = i+1, j-1 {
+		collectedMessages[i], collectedMessages[j] = collectedMessages[j], collectedMessages[i]
+	}
+
+	// Append the latest & new user prompt to collectedMessages
+	collectedMessages = append(collectedMessages, types.APIMessage{
 		Role:    "user",
 		Content: userPrompt,
 	})
-	return out
+
+	return collectedMessages, usedTokens
+}
+
+func estimateTokenCount(s string) int {
+	words := len(strings.Fields(s))
+	return int(float64(words) * 1.3)
 }
 
 func GetModelConfigByID(modelID string) (*types.ModelConfig, error) {

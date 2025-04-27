@@ -4,6 +4,7 @@ import { SessionControl } from "./components/session/SessionControl";
 import { ModelControl } from "./components/model/ModelControl";
 import { ChatArea } from "./components/chat/ChatArea";
 import { ChatProvider, useChat } from "./context/ChatContext";
+import 'sweetalert2/dist/sweetalert2.min.css';
 
 const AppContent: React.FC = () => {
   const { selectedSession, selectedModel } = useChat();

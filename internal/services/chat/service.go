@@ -48,15 +48,36 @@ func PostChatMessage(request *types.ChatRequest) (string, error) {
 
 	// Get chat history
 	chatMessages, err := getMessageHistory(request)
+
 	if err != nil {
 		return "", err
 	}
 
-	// Convert to API format
-	apiMessages := toAPI(chatMessages, request.Message)
+	// Build & trim history + prompt, count tokens used
+	apiMessages, totalTokensUsed := toAPI(chatMessages, request.Message, modelConfig.ContextSize)
 
-	// Call the LLM provider
-	reply, err := callModelProvider(request.ModelID, modelConfig, apiMessages)
+	// Reserve a small safety buffer off the context window
+	tokenBuffer := 300
+
+	// Compute how many tokens remain in the context window
+	remaining := modelConfig.ContextSize - totalTokensUsed
+
+	// Don’t use more than (contextSize - buffer)
+	allowed := min(remaining, modelConfig.ContextSize-tokenBuffer)
+
+	// Also cap at the model’s own generation limit, if set
+	if modelConfig.MaxCompletionTokens > 0 {
+		allowed = min(allowed, modelConfig.MaxCompletionTokens)
+	}
+
+	// Never go negative
+	if allowed < 0 {
+		allowed = 0
+	}
+
+	// Call the LLM
+	reply, err := callModelProvider(request.ModelID, modelConfig, apiMessages, allowed)
+
 	if err != nil {
 		log.Printf("❌ Error calling model %q for session %q: %v",
 			request.ModelID, request.SessionID, err)
