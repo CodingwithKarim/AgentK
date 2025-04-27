@@ -1,10 +1,12 @@
 # AgentK
 > Your multi-model AI control center
 
-![Screenshot 2025-04-27 062732](https://github.com/user-attachments/assets/771527c4-07ef-491c-81c1-17545a7c9a77)
+![image](https://github.com/user-attachments/assets/838f189d-09c1-4ba0-a972-e2c4c37730b7)
 
+AgentK is an AI control center that unifies access to 7 major AI providers under one sleek, minimalistic interface. With AgentK, you can swap between models during chat sessions, manage multiple conversations at the same time, and interact with different AI providers individually or simultaneously — all without ever leaving the app.
 
-AgentK is an AI WrapGPT that unifies **7 major AI providers** under one roof. Swap models on the fly, manage multiple chat sessions, and talk to multiple models simultaneously or individually — all from a sleek & minimal UI.
+Thanks to direct integration with provider APIs, you have the flexibility to use **hundreds of available models** across OpenAI, Anthropic, Groq, Gemini, Perplexity, Cohere, and Hugging Face. Whether you're prototyping ideas, performing research, or just exploring the capabilities of modern AI, AgentK makes it simple to experiment with the latest cutting edge AI models without spending money every month on expensive AI subscriptions. 
+
 
 ---
 
@@ -22,7 +24,7 @@ AgentK is an AI WrapGPT that unifies **7 major AI providers** under one roof. Sw
 ---
 
 ## Features
- 🔹 **Multi-Provider Support**  
+ 🔹 **Multi-AI-Provider Support**  
   - OpenAI  
   - Anthropic (Claude)  
   - Groq  
@@ -30,9 +32,10 @@ AgentK is an AI WrapGPT that unifies **7 major AI providers** under one roof. Sw
   - Cohere  
   - Google Gemini  
   - Hugging Face
+  - Any OpenAI-compatible API endpoint (just specify the endpoint URL and use OpenAI as provider value in agentk_config.json)
 
  🔹 **Multi-Model Conversations**  
-  Talk to multiple models simultaneously or one at a time. Compare responses across different models for the same message.
+  Talk to multiple models simultaneously or one at a time. Compare responses across different models for the same prompt.
 
  🔹 **Dynamic Context Sharing**  
   Toggle shared context on/off between models. Let models see each other's responses or keep conversations isolated.
@@ -78,7 +81,6 @@ AgentK is an AI WrapGPT that unifies **7 major AI providers** under one roof. Sw
 
 4. Open your browser to `http://localhost:5173` and enjoy.
    
-
 ---
 
 ## API Keys
@@ -92,7 +94,7 @@ AgentK is an AI WrapGPT that unifies **7 major AI providers** under one roof. Sw
 - [Google AI API Keys](https://aistudio.google.com/app/apikey)
 - [Hugging Face API Keys](https://huggingface.co/settings/tokens)
 
-OpenAI & Anthropic models will both require $5 upfront for API access. Perplexity will require $3 upfront. The rest of the providers are generous with their free tiers and give you access to plenty of models. HuggingFace & Groq especially gives you great model access & power with low fees. 
+OpenAI & Anthropic models will both require $5 upfront for API access. Perplexity will require $3 upfront. The rest of the providers are generous with their free tiers and give you access to plenty of models. HuggingFace & Groq especially gives you great model access & power at low fees. 
 
 ---
 
