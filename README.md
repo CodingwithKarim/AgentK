@@ -84,7 +84,7 @@ Thanks to direct integration with provider APIs, you have the flexibility to use
 ---
 
 ## API Keys
-**IMPORTANT**: You must sign up for API keys from each provider you wish to use: You won't be able to run interference otherwise since the request payload requires it. 
+**IMPORTANT**: You must sign up for API keys from each provider you wish to use: You won't be able to run inference otherwise since the request payload for all provider endpoints require it. Once you've grabbed your API keys, make sure to drop them into the AgentK_config.json file. You can skip this step for any providers you dont intend to use.
 
 - [OpenAI API Keys](https://platform.openai.com/api-keys)
 - [Anthropic API Keys](https://console.anthropic.com/settings/keys)
@@ -94,7 +94,9 @@ Thanks to direct integration with provider APIs, you have the flexibility to use
 - [Google AI API Keys](https://aistudio.google.com/app/apikey)
 - [Hugging Face API Keys](https://huggingface.co/settings/tokens)
 
-OpenAI & Anthropic models will both require $5 upfront for API access. Perplexity will require $3 upfront. The rest of the providers are generous with their free tiers and give you access to plenty of models. HuggingFace & Groq especially gives you great model access & power at low fees. 
+OpenAI and Claude allow you to create an API key for free; however, you cannot run inference on their models without purchasing API credits. Both platforms require a minimum payment of $5 to enable access. Perplexity also requires an upfront payment of at least $3 for API usage (in my opinion their Sonar models are underwhelming). 
+
+The rest of the providers offer both free and paid tiers, allowing you to start interacting with models for free. Groq and Hugging Face stand out for their generous free-tier access and offer some of the most cost-effective API credits from what I've seen. Google Gemini also provides a great free tier with access to their powerful Gemini models which I've noticed has incredible response times & very large context size capabilities. 
 
 ---
 
@@ -113,10 +115,10 @@ OpenAI & Anthropic models will both require $5 upfront for API access. Perplexit
        "HuggingFace": {"apiKey": "YOUR_API_KEY" }
      },
      "Models": {
-       // Add model info here after consulting provider docs
-       // Default models will be provided for you but you are expected to config your own models using the agentk_config.json file + appropriate API keys for access
-       // If you don't have API keys set up for certain providers, do not include their modles in the config file
-       // Model info can be found under provider docs (see below)
+       // Add model info here after consulting provider docs for proper configuration
+       // Default models will be provided for you to use and follow as an example but you are expected to config your own models using the agentk_config.json file + appropriate API keys for access
+       // If you don't have API keys set up for certain providers, do not include their modles in the config file as they will be unaccessible. 
+       // Model info can be found under provider docs  (see below)
      }
    }
    ```
@@ -124,12 +126,12 @@ OpenAI & Anthropic models will both require $5 upfront for API access. Perplexit
    ```jsonc
    "Models": {
      "gpt-4o-2024-08-06": {
-       "id": "gpt-4o-2024-08-06",
-       "name": "GPT-4o",
-       "provider": "OpenAI",
-       "endpoint": "https://api.openai.com/v1/chat/completions",
-       "contextSize": 128000,
-       "maxCompletionTokens": 16384
+       "id": "gpt-4o-2024-08-06", // the ID property needs to match the key, see default models for example
+       "name": "GPT-4o", // model name you would like to use, can be custom
+       "provider": "OpenAI", // AI provider, see options above
+       "endpoint": "https://api.openai.com/v1/chat/completions", // API endpoint, see provider docs for URL endpoints (see curl example)
+       "contextSize": 128000, // Total available context (prompt + history) for the model per request. Affects API costs. Adjustable. See provider documentation.
+       "maxCompletionTokens": 16384 // Maximum size of the model's response. Also impacts API costs. Adjustable. See provider documentation.
      },
      // ...more models
    }
