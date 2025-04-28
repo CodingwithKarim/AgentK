@@ -1,7 +1,7 @@
 # AgentK
 > Your multi-model AI control center
 
-![image](https://github.com/user-attachments/assets/838f189d-09c1-4ba0-a972-e2c4c37730b7)
+![image](https://github.com/user-attachments/assets/8e4a23ae-e07e-46f7-bd49-bf7448123738)
 
 AgentK is an AI control center that unifies access to 7 major AI providers under one sleek, minimalistic interface. With AgentK, you can swap between models during chat sessions, manage multiple conversations at the same time, and interact with different AI providers individually or simultaneously — all without ever leaving the app.
 
@@ -32,7 +32,7 @@ Thanks to direct integration with provider APIs, you have the flexibility to use
   - Cohere  
   - Google Gemini  
   - Hugging Face
-  - Any OpenAI-compatible API endpoint (just specify the endpoint URL and use OpenAI as provider value in agentk_config.json)
+  - Hugging Face Inference Providers (gives access to 10+ more AI providers & hundreds of models)
 
  🔹 **Multi-Model Conversations**  
   Talk to multiple models simultaneously or one at a time. Compare responses across different models for the same prompt.
@@ -96,7 +96,11 @@ Thanks to direct integration with provider APIs, you have the flexibility to use
 
 OpenAI and Claude allow you to create an API key for free; however, you cannot run inference on their models without purchasing API credits. Both platforms require a minimum payment of $5 to enable access. Perplexity also requires an upfront payment of at least $3 for API usage (in my opinion their Sonar models are underwhelming). 
 
-The rest of the providers offer both free and paid tiers, allowing you to start interacting with models for free. Groq and Hugging Face stand out for their generous free-tier access and offer some of the most cost-effective API credits from what I've seen. Google Gemini also provides a great free tier with access to their powerful Gemini models which I've noticed has incredible response times & very large context size capabilities. 
+The rest of the AI providers offer both free and paid tiers, allowing you to start interacting with models at no cost. Groq and Hugging Face stand out for their generous free-tier access and offer some of the most cost-effective API credits available.
+
+Hugging Face is particularly powerful, giving you access to hundreds of models, along with integrations from over 10 dedicated inference providers, all through a single API key. You can also visit any provider's website and try out their flagship models — just make sure to use the correct Hugging Face API URL and model name from their documentation. This unlocks a wide range of models hosted by various companies, greatly expanding your available options.
+
+Google Gemini also provides an excellent free tier, offering access to their powerful Gemini models. In my experience, Gemini models deliver incredible response times and support very large context sizes, making them an outstanding option for demanding applications.
 
 ---
 
@@ -207,7 +211,8 @@ Pull model IDs from any of these sources:
 - 🔹 [Perplexity Models](https://docs.perplexity.ai/models/model-cards)  
 - 🔹 [Cohere Models](https://docs.cohere.com/v1/docs/models)  
 - 🔹 [Google Gemini API Models](https://ai.google.dev/gemini-api/docs/models)  
-- 🔹 [Hugging Face Chat-Completion](https://huggingface.co/docs/inference-providers/tasks/chat-completion)  
+- 🔹 [Hugging Face Chat-Completion](https://huggingface.co/docs/inference-providers/tasks/chat-completion)
+- 🔹 [Hugging Face Inference Providers](https://huggingface.co/docs/inference-providers/index)  
 
 ---
 
