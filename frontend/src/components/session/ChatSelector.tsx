@@ -16,12 +16,16 @@ export const ChatSelector: React.FC<SessionSelectorProps> = ({
 }) => (
   <Listbox value={selectedSession} onChange={onSelectSession}>
     <div className="relative flex-[0_0_70%] h-12">
-      <HUIListboxButton className="w-full h-full flex items-center justify-between px-4 bg-white border border-gray-200 rounded-xl shadow-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-300 transition">
-        <span
-          className={`truncate ${
-            selectedSession ? "text-gray-900" : "text-gray-500"
-          }`}
-        >
+      <HUIListboxButton
+        className={
+          /* Core layout and styling */
+          "w-full h-full flex items-center justify-between px-4 bg-white border-gray-300 rounded-2xl shadow-sm transition-all duration-200 outline-none " +
+          /* Hover effect */
+          "hover:border-indigo-400 " 
+          /* Keyboard-focus ring only on Tab (soft glow) */
+        }
+      >
+        <span className={`truncate ${selectedSession ? "text-gray-900" : "text-gray-500"}`}>
           {selectedSession
             ? sessions.find((s) => s.id === selectedSession)?.name
             : "Select a chat…"}
@@ -35,24 +39,22 @@ export const ChatSelector: React.FC<SessionSelectorProps> = ({
         leaveFrom="opacity-100"
         leaveTo="opacity-0"
       >
-        <HUIListboxOptions className="absolute z-10 mt-1 max-h-60 w-full overflow-auto bg-white border border-gray-200 rounded-xl py-1 text-base shadow-lg focus:outline-none">
+        <HUIListboxOptions
+          className="absolute z-10 mt-2 w-full max-h-60 overflow-auto rounded-2xl bg-white py-2 shadow-xl ring-1 ring-black/5 transition-all duration-200 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent outline-none"
+        >
           {sessions.map((s) => (
             <HUIListboxOption
               key={s.id}
               value={s.id}
               className={({ active }) =>
-                `relative cursor-pointer select-none py-2 pl-4 pr-10 ${
-                  active ? "bg-indigo-50 text-indigo-600" : "text-gray-900"
+                `relative cursor-pointer select-none py-2 pl-4 pr-10 transition-all duration-200 ${
+                  active ? "bg-indigo-100 text-indigo-700" : "text-gray-900"
                 }`
               }
             >
               {({ selected }) => (
                 <>
-                  <span
-                    className={`block truncate ${
-                      selected ? "font-semibold" : "font-normal"
-                    }`}
-                  >
+                  <span className={`block truncate ${selected ? "font-semibold" : "font-normal"}`}>
                     {s.name}
                   </span>
                   {selected && (
@@ -69,3 +71,8 @@ export const ChatSelector: React.FC<SessionSelectorProps> = ({
     </div>
   </Listbox>
 );
+
+/* Add the following CSS to your global styles (e.g., src/index.css) */
+/*
+
+*/

@@ -1,5 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
+import TextareaAutosize from "react-textarea-autosize";
+import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
 
 type ChatInputProps = {
   value: string;
@@ -15,85 +17,80 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   isLoading,
 }) => {
   return (
-    <div>
-      <label className="block text-sm font-semibold text-gray-700 mb-1">
-        💬 Your Message
-      </label>
-      <div className="relative">
-        <textarea
-          rows={4}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              onSubmit();
-            }
-          }}
-          disabled={isLoading}
-          className={`w-full px-5 py-4 pr-14 bg-white border border-gray-300 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 transition ${
-            isLoading ? "bg-gray-100 text-gray-500" : ""
-          }`}
-          placeholder={
-            isLoading ? "Waiting for response..." : "Type your message…"
-          }
-        />
-        <div className="absolute right-3 bottom-3">
-          <motion.button
-            onClick={onSubmit}
-            disabled={!value.trim() || isLoading}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className={`p-2 rounded-xl flex items-center justify-center transition-all ${
-              !value.trim() || isLoading
-                ? "bg-gray-200 text-gray-400"
-                : "bg-gradient-to-r from-indigo-600 to-blue-400 text-white shadow-md hover:shadow-lg"
-            }`}
-          >
-            {isLoading ? (
-              <svg className="w-6 h-6 animate-spin" viewBox="0 0 24 24">
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                  fill="none"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
-            ) : (
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                />
-              </svg>
-            )}
-          </motion.button>
-        </div>
-        {isLoading && (
-          <div className="absolute left-4 bottom-2 text-xs text-indigo-500 font-medium">
-            Processing message...
-          </div>
+    <div className="relative w-full max-w-2xl mx-auto">
+      {/* 1) Textarea is the "peer" */}
+      <TextareaAutosize
+    id="chat-input"
+    placeholder=" "           
+    value={value}
+    onChange={e => onChange(e.target.value)}
+    disabled={isLoading}
+    onKeyDown={(e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        onSubmit();
+      }
+    }}
+    minRows={1}
+    className="peer w-full px-4 pt-6 pb-12 
+      bg-white border border-gray-300 rounded-2xl shadow-inner
+      focus:outline-none focus:ring-2 focus:ring-indigo-300
+      hover:shadow-md transition-all
+      resize-none overflow-hidden
+      text-gray-800
+      disabled:bg-gray-50 disabled:text-gray-400"/>
+
+  <label
+    htmlFor="chat-input"
+    className="
+      absolute border-none left-4 px-1 bg-white  /* white bg to cover border */
+      -top-2                     /* default: floated above */
+      text-sm text-indigo-600    /* default: small + indigo */
+      transition-all
+
+      /* when empty, drop down & enlarge+gray */
+      peer-placeholder-shown:top-6
+      peer-placeholder-shown:text-base
+      peer-placeholder-shown:text-gray-400
+      peer-placeholder-shown:bg-transparent
+    "
+  >
+    Your Message
+  </label>
+
+      {/* Send Button */}
+      <motion.button
+        onClick={onSubmit}
+        disabled={!value.trim() || isLoading}
+        whileHover={{ scale: !value.trim() || isLoading ? 1 : 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        className={`
+          absolute right-3 bottom-3 p-3 rounded-full flex items-center justify-center
+          transition-all
+          ${!value.trim() || isLoading
+            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+            : "bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg hover:shadow-xl"}
+        `}
+      >
+        {isLoading ? (
+          <motion.div animate={{ rotate: 360 }} transition={{ loop: Infinity, duration: 1 }}>
+            <PaperAirplaneIcon className="w-6 h-6" />
+          </motion.div>
+        ) : (
+          <PaperAirplaneIcon className="w-6 h-6 transform rotate-45" />
         )}
-      </div>
-      <div className="text-xs text-gray-500 mt-1 text-right">
+      </motion.button>
+
+      {/* Helper Text */}
+      <div className="mt-1 text-xs text-gray-500 text-right">
         Press Enter to send, Shift+Enter for new line
       </div>
+
+      {isLoading && (
+        <div className="absolute left-4 bottom-10 text-xs text-indigo-600 font-medium">
+          Processing…
+        </div>
+      )}
     </div>
   );
 };

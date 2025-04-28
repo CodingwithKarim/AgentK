@@ -5,7 +5,20 @@ export default {
       "./src/**/*.{js,ts,jsx,tsx}",
     ],
     theme: {
-      extend: {},
+      extend: {
+        colors: {
+          chatBg: {
+            light: "rgba(255,255,255,0.3)",
+            dark: "rgba(32,32,35,0.6)",
+          },
+        },
+      },
     },
-    plugins: [],
+    variants: {
+      extend: {
+        outline: ['focus-visible'],
+        ringWidth: ['focus-visible'],
+        borderColor: ['focus-visible'],
+      },
+    },
   }

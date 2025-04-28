@@ -13,7 +13,7 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   label,
 }) => {
   return (
-    <div className="flex items-center space-x-3">
+    <div className="flex items-center space-x-3 outline-none">
       <motion.div
         onClick={onToggle}
         initial={true}
@@ -21,7 +21,7 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
           backgroundColor: isOn ? "#6366F1" : "#E5E7EB",
         }}
         whileTap={{ scale: 0.9 }}
-        className={`relative w-12 h-6 rounded-full cursor-pointer transition-colors ${
+        className={`relative outline-none w-12 h-6 rounded-full cursor-pointer transition-colors ${
           isOn ? "shadow-lg" : ""
         }`}
       >
