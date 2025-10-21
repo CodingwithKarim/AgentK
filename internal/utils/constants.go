@@ -11,3 +11,5 @@ const (
 	COHERE      types.Provider = "Cohere"
 	HUGGINGFACE types.Provider = "HuggingFace"
 )
+
+var PerplexityModels = []string{"sonar", "sonar-pro", "sonar-reasoning", "sonar-reasoning-pro", "sonar-deep-research"}

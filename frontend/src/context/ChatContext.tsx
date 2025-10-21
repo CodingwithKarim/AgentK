@@ -1,52 +1,54 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import Swal from "sweetalert2";
-import { 
-  ChatMessage, 
-  Session, 
-  Model, 
+import {
+  ChatMessage,
+  Session,
+  Model,
   Provider
 } from "../utils/types/types";
-import { 
-  fetchSessions, 
-  createSession, 
-  deleteSession 
+import {
+  fetchSessions,
+  createSession,
+  deleteSession,
+  renameSession
 } from "../api/sessionAPI";
-import { 
-  fetchModels 
+import {
+  fetchModels
 } from "../api/modelApi";
-import { 
-  fetchChatHistory, 
-  sendChatMessage, 
-  clearChatContext 
+import {
+  fetchChatHistory,
+  sendChatMessage,
+  clearChatContext
 } from "../api/chatApi";
-import { preferredOrder } from "../utils/constants";
 
 type ChatContextType = {
-  // Data states
   sessions: Session[];
   models: Model[];
   filteredModels: Model[];
   providers: Provider[];
   chatMessages: ChatMessage[];
-  
-  // Selection states
+  menuRef: React.RefObject<HTMLDivElement | null>;
+  sideBarRef: React.RefObject<HTMLDivElement | null>;
+  sidebarOpen: boolean;
+
   selectedSession: string;
   selectedModel: string;
-  selectedProvider: Provider;
   sharedContext: boolean;
   inputPrompt: string;
   isLoading: boolean;
-  
-  // Actions
+  menuOpen: boolean;
+
   setSelectedSession: (id: string) => void;
   setSelectedModel: (id: string) => void;
-  setSelectedProvider: (provider: Provider) => void;
   setSharedContext: (shared: boolean) => void;
   setInputPrompt: (prompt: string) => void;
-  
-  // Operations
+  setMenuOpen: (open: boolean) => void;
+  setSidebarOpen: (isOpen: boolean) => void;
+
   handleNewChat: () => Promise<void>;
-  handleDeleteSession: () => Promise<void>;
+  handlePickSession: (id: string) => void;
+  handleRenameSession: (id: string, title: string) => void;
+  handleDeleteSession: (id: string) => Promise<void>;
   handleClearContext: () => Promise<void>;
   handleSubmit: () => Promise<void>;
 };
@@ -54,133 +56,146 @@ type ChatContextType = {
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Data states
   const [sessions, setSessions] = useState<Session[]>([]);
   const [models, setModels] = useState<Model[]>([]);
-  const memoizedModels = React.useMemo(() => models, [models]);
-  const [filteredModels, setFilteredModels] = useState<Model[]>([]);
-  const [providers, setProviders] = useState<Provider[]>([]);
+  const [filteredModels] = useState<Model[]>([]);
+  const [providers] = useState<Provider[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  
-  // Selection states
+
   const [selectedSession, setSelectedSession] = useState<string>("");
   const [selectedModel, setSelectedModel] = useState<string>("");
-  const [selectedProvider, setSelectedProvider] = useState<Provider>("");
   const [sharedContext, setSharedContext] = useState<boolean>(false);
   const [inputPrompt, setInputPrompt] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const sideBarRef = useRef<HTMLDivElement>(null);
+
   const sessionActive = Boolean(selectedSession);
 
-  // Initial data loading
   useEffect(() => {
-    fetchSessions()
-      .then(setSessions)
-      .catch(console.error);
-
+    fetchSessions().then(setSessions).catch(console.error);
     fetchModels()
       .then((modelList) => {
         setModels(modelList);
-        setFilteredModels(modelList);
-        
-        const providerList = Array.from(
-          new Set(modelList.map((m) => m.provider))
-        ).sort((a, b) => {
-          const indexA = preferredOrder.indexOf(a);
-          const indexB = preferredOrder.indexOf(b);
-          if (indexA === -1 && indexB === -1) return a.localeCompare(b);
-          if (indexA === -1) return 1;
-          if (indexB === -1) return -1;
-          return indexA - indexB;
-        });
-        
-        setProviders(providerList);
+        setSelectedModel(modelList.length > 0 ? modelList[0].id : "")
       })
       .catch(console.error);
+
+    function onDocClick(e: MouseEvent) { if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false); }
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') setMenuOpen(false); }
+    document.addEventListener('mousedown', onDocClick);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDocClick);
+      document.removeEventListener('keydown', onKey);
+    };
   }, []);
 
   useEffect(() => {
-    if (!selectedSession) return;
-    
-    setSelectedProvider("");
-    setSharedContext(false);
-    setChatMessages([]);
-
-    setSelectedModel("")
-    
-  }, [selectedSession]);
-
-  // Filter models when provider changes
-  useEffect(() => {
-    const newList = selectedProvider
-      ? models.filter((m) => m.provider === selectedProvider)
-      : models;
-    setFilteredModels(newList);
-
-    if (!newList.some((m) => m.id === selectedModel)) {
-      setSelectedModel(newList.length > 0 ? newList[0].id : "");
+    if (!sessionActive || !selectedModel || isLoading) {
+      return;
     }
-  }, [selectedProvider, memoizedModels, selectedModel]);
-
-  // Fetch chat history when session or model changes
-  useEffect(() => {
-    if (!sessionActive || !selectedModel) return;
 
     fetchChatHistory(selectedSession, selectedModel, sharedContext)
       .then(setChatMessages)
       .catch(console.error);
-  }, [selectedSession, selectedModel, sharedContext, selectedProvider]);
+  }, [selectedSession, selectedModel, sharedContext]);
 
-  // Operation handlers
+  useEffect(() => {
+    if (!sidebarOpen) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+
+      if (isSwalOpen() || isInsideSwal(target)) return;
+
+      if (sideBarRef.current && !sideBarRef.current.contains(target)) {
+        setSidebarOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [sidebarOpen]);
+
   const handleNewChat = async () => {
+    setSelectedSession("");
+    setChatMessages([]);
+    setInputPrompt("");
+    setSidebarOpen(false);
+  };
+
+  const handlePickSession = (id: string) => {
+    setSelectedSession(id);
+    setInputPrompt("");
+    setSidebarOpen(false);
+  };
+
+  const handleRenameSession = async (id: string) => {
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
+
+    if (isMobile) setSidebarOpen(false);
+
     const { value: name } = await Swal.fire<string>({
-      title: "Enter Chat Name",
+      title: "Rename Chat Session",
       input: "text",
-      inputPlaceholder: "Type a name…",
+      inputPlaceholder: "Type a new session name...",
       showCancelButton: true,
       confirmButtonText: "Create",
       cancelButtonText: "Cancel",
       returnFocus: false,
       customClass: {
-        popup:    "rounded-2xl p-6 shadow-lg bg-white",
-        title:    "text-xl font-semibold text-gray-800",
-        input:    "border border-gray-300 rounded-lg p-2 focus:ring-indigo-500 focus:border-indigo-500",
+        popup: "rounded-2xl p-6 shadow-lg bg-white",
+        title: "text-xl font-semibold text-gray-800",
+        input: "border border-gray-300 rounded-lg p-2 focus:ring-indigo-500 focus:border-indigo-500",
         actions: "mt-6 flex justify-end space-x-3",
         confirmButton: "px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white",
-        cancelButton:  "px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700",
+        cancelButton: "px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700",
       },
       width: 400,
       backdrop: 'rgba(31, 41, 55, 0.6)',
-      buttonsStyling: false,  // tell SweetAlert2 not to inject its default button styles
+      buttonsStyling: false,
       inputValidator(value) {
-        if (!value || !value.trim()){
-          return "Chat name cannot be empty"
+        if (!value || !value.trim()) {
+          return "Session name cannot be empty"
         }
       },
     });
 
-    if (!name?.trim()) return;
-    
+    if (name == undefined) {
+      return;
+    }
+
+    const session: Session = {
+      id: id,
+      name: name
+    };
+
     try {
-      const session = await createSession(name.trim());
-      setSessions((prev) => [...prev, session]);
-      setSelectedSession(session.id);
-      setChatMessages([]);
-      setSelectedProvider("");
-      setSharedContext(false);
+      await renameSession(session);
     } catch (error) {
       console.error(error);
+      return;
     }
+
+    const cleaned = name.trim() || "Untitled";
+    setSessions(prev =>
+      prev.map(s => (s.id === id ? { ...s, name: cleaned } : s)) // <-- name
+    );
   };
 
-  const handleDeleteSession = async () => {
-    if (!sessionActive) return;
-  
-    // 1) fire the warning
-    const { isConfirmed } = await Swal.fire<string>({
+  const handleDeleteSession = async (id: string) => {
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
+
+    if (isMobile) setSidebarOpen(false);
+
+    const { isConfirmed } = await Swal.fire({
       title: "<span class='text-red-600'>Are you sure?</span>",
       html: "<p class='text-gray-600'>Deleting this chat is permanent and cannot be undone.</p>",
-      text: "This action cannot be undone.",
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Yes, delete it",
@@ -196,55 +211,35 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         cancelButton: "px-5 py-2.5 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium",
         actions: "mt-6 flex justify-end space-x-4",
       },
-      showClass: {
-        popup: "animate__animated animate__fadeInDown",
-      },
-      hideClass: {
-        popup: "animate__animated animate__fadeOutUp",
-      },
       backdrop: 'rgba(31, 41, 55, 0.6)',
     });
-  
-    // 2) if they clicked “Yes”
     if (!isConfirmed) return;
-  
+
     try {
-      const success = await deleteSession(selectedSession);
-      if (success) {
-        // update your state
-        setSessions((prev) => prev.filter((s) => s.id !== selectedSession));
+      const ok = await deleteSession(id);
+      if (ok) {
+        setSessions(prev => prev.filter(s => s.id !== id));
         setSelectedSession("");
         setChatMessages([]);
-  
-        // optional success toast
-        await Swal.fire({
-          icon: "success",
-          title: "Deleted!",
-          text: "Your chat has been removed.",
-          timer: 1500,
-          showConfirmButton: false,
-        });
+        await Swal.fire({ icon: "success", iconColor: "#ef4444", title: "Deleted!", timer: 1200, showConfirmButton: false });
       }
-    } catch (error) {
-      console.error(error);
-      await Swal.fire({
-        icon: "error",
-        title: "Oops…",
-        text: "Something went wrong. Please try again.",
-      });
+    } catch (e) {
+      console.error(e);
+      await Swal.fire({ icon: "error", title: "Oops…", text: "Please try again." });
+    }
+    finally {
     }
   };
 
   const handleClearContext = async () => {
     if (!sessionActive || !selectedModel) return;
-  
-    // Dynamically build the warning message
+
     const warningMessage = sharedContext
-      ? "This will delete all messages associated with this session across all models."
+      ? "This will delete all messages for this session across all models."
       : "This will delete messages for the selected model only.";
-  
+
     const { isConfirmed } = await Swal.fire({
-      title: "Clear Chat Context?",
+      title: "Clear Conversation History?",
       text: warningMessage,
       icon: "warning",
       showCancelButton: true,
@@ -262,121 +257,160 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       },
       backdrop: 'rgba(31, 41, 55, 0.6)',
     });
-  
     if (!isConfirmed) return;
-  
+
     try {
       await clearChatContext(selectedSession, selectedModel, sharedContext);
-      const messages = await fetchChatHistory(selectedSession, selectedModel, sharedContext);
-      setChatMessages(messages);
-  
-      await Swal.fire({
-        icon: "success",
-        title: "Context Cleared!",
-        text: "Chat history has been reset.",
-        timer: 1500,
-        showConfirmButton: false,
-      });
-    } catch (error) {
-      console.error(error);
-      await Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Failed to clear chat context. Please try again.",
-      });
+      const fresh = await fetchChatHistory(selectedSession, selectedModel, sharedContext);
+      setChatMessages(fresh);
+      await Swal.fire({ icon: "success", iconColor: "#ef4444", title: "Context Cleared", timer: 1200, showConfirmButton: false });
+    } catch (e) {
+      console.error(e);
+      await Swal.fire({ icon: "error", title: "Error", text: "Failed to clear chat." });
     }
   };
 
   const handleSubmit = async () => {
-    if (!inputPrompt.trim() || !sessionActive || !selectedModel || isLoading) return;
-    
+    const text = inputPrompt.trim();
+    if (!text || isLoading || !selectedModel) return;
+
     setIsLoading(true);
-    const txt = inputPrompt.trim();
-    
-    setChatMessages((prev) => [
+    setInputPrompt("");
+    setChatMessages(prev => [
       ...prev,
       {
+
         role: "user",
-        name: "You",
-        time: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        text: txt,
-      },
+        text,
+      }
     ]);
-    
-    setInputPrompt("");
+
+    setChatMessages(prev => [
+      ...prev,
+      {
+        role: "assistant",
+        text: "",
+        model: selectedModel,
+      }
+    ]);
+
+    let workingSessionId = selectedSession;
+    if (!workingSessionId) {
+      try {
+        const autoTitle = generateTitleFromText(text);
+        const s = await createSession(autoTitle);
+
+        setSessions(prev => [{ ...s }, ...prev]);
+        setSelectedSession(s.id);
+        workingSessionId = s.id;
+      } catch (e) {
+        console.error(e);
+        setChatMessages(prev => {
+          const arr = [...prev];
+          const idx = arr.findIndex(m => m.role === "assistant" && m.text === "");
+          if (idx !== -1) arr[idx] = { ...arr[idx], text: "[Error creating session]" };
+          return arr;
+        });
+        setIsLoading(false);
+        return;
+      }
+    }
 
     try {
-      const response = await sendChatMessage(
-        selectedSession,
-        selectedModel,
-        txt,
-        sharedContext
-      );
-      
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          name: "AgentK",
-          time: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          text: response,
-        },
-      ]);
-    } catch (error) {
-      alert("Something went wrong.");
-      console.error(error);
+      const model_name = models.find(model => model.id === selectedModel)?.name ?? "";
+
+      const resp = await sendChatMessage(workingSessionId, selectedModel, model_name, text, sharedContext);
+
+      setChatMessages(prev => {
+        const arr = [...prev];
+        for (let i = arr.length - 1; i >= 0; i--) {
+          if (arr[i].role === "assistant") {
+            arr[i] = { ...arr[i], text: resp, model_name: model_name };
+            break;
+          }
+        }
+        return arr;
+      });
+
+      setSessions(prev => prev.map(s => (s.id === workingSessionId ? { ...s } : s)));
+
+    } catch (e: any) {
+      console.error(e);
+      setChatMessages(prev => {
+        const arr = [...prev];
+        for (let i = arr.length - 1; i >= 0; i--) {
+          if (arr[i].role === "assistant") {
+            arr[i] = { ...arr[i], text: (arr[i].text || "") + `\n[Error: ${e?.message || "send failed"}]` };
+            break;
+          }
+        }
+        return arr;
+      });
     } finally {
       setIsLoading(false);
+      abortRef.current = null;
     }
   };
 
-  const value = {
-    // Data states
+  const value: ChatContextType = {
     sessions,
     models,
     filteredModels,
     providers,
     chatMessages,
-    
-    // Selection states
+    menuRef,
+    sideBarRef,
+
     selectedSession,
     selectedModel,
-    selectedProvider,
     sharedContext,
     inputPrompt,
     isLoading,
-    
-    // Setters
+    menuOpen,
+    sidebarOpen,
+
     setSelectedSession,
     setSelectedModel,
-    setSelectedProvider,
     setSharedContext,
     setInputPrompt,
-    
-    // Operations
+    setMenuOpen,
+    setSidebarOpen,
+
     handleNewChat,
+    handlePickSession,
+    handleRenameSession,
     handleDeleteSession,
     handleClearContext,
     handleSubmit,
   };
 
-  return (
-    <ChatContext.Provider value={value}>
-      {children}
-    </ChatContext.Provider>
-  );
+  const isSwalOpen = () => document.body.classList.contains("swal2-shown");
+  const isInsideSwal = (node: Node | null) =>
+    node instanceof Element && (node.closest(".swal2-container") || node.closest(".swal2-popup"));
+
+  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 };
 
 export const useChat = (): ChatContextType => {
-  const context = useContext(ChatContext);
-  if (context === undefined) {
-    throw new Error("useChat must be used within a ChatProvider");
-  }
-  return context;
+  const ctx = useContext(ChatContext);
+  if (!ctx) throw new Error("useChat must be used within a ChatProvider");
+  return ctx;
 };
+
+function generateTitleFromText(text: string) {
+  if (!text) return "New chat";
+  let t = text
+    .replace(/https?:\/\/\S+/g, "")
+    .replace(/[`"'<>]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 120);
+
+  const STOP = new Set(["the", "a", "an", "and", "or", "but", "to", "of", "in", "for", "on", "with", "about", "is", "are", "am", "be", "as", "at", "by", "from", "into", "that", "this", "it", "i", "you"]);
+  const words = t.split(" ").filter(w => !STOP.has(w.toLowerCase()));
+  if (!words.length) words.push("Chat");
+
+  const titleRaw = words.slice(0, 8).join(" ");
+  const titleCased = titleRaw.replace(/\w\S*/g, s => s[0].toUpperCase() + s.slice(1));
+  return titleCased.length <= 36 ? titleCased : titleCased.slice(0, 35).trimEnd() + "…";
+}

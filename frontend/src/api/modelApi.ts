@@ -1,30 +1,32 @@
 import { Model } from "../utils/types/types";
-import { preferredOrder } from "../utils/constants";
+import { database as db } from "../db/index";
 
-export const fetchModels = async (): Promise<Model[]> => {
-  try {
-    const r = await fetch("/api/models");
-    const d = await r.json();
-    const modelList: Model[] = Array.isArray(d)
-      ? d
-      : Array.isArray(d.models)
-        ? d.models
-        : [];
+export function modelLabel(m: Model): string {
+  return m.alias?.trim() || m.modelId;
+}
 
-    modelList.sort((a, b) => {
-      const indexA = preferredOrder.indexOf(a.provider);
-      const indexB = preferredOrder.indexOf(b.provider);
-      if (indexA !== indexB) {
-        if (indexA === -1) return 1;
-        if (indexB === -1) return -1;
-        return indexA - indexB;
-      }
-      return a.name.localeCompare(b.name);
-    });
+export async function fetchModels(): Promise<Model[]> {
+  const models = await db.models.toArray();
+  return models.sort((a, b) => {
+    const ea = a.enabled ? 1 : 0;
+    const eb = b.enabled ? 1 : 0;
+    if (ea !== eb) return eb - ea;
 
-    return modelList;
-  } catch (error) {
-    console.error(error);
-    return [];
-  }
-};
+    const la = modelLabel(a).toLowerCase();
+    const lb = modelLabel(b).toLowerCase();
+
+    if (la !== lb) return la.localeCompare(lb);
+
+    if (a.providerId !== b.providerId) return a.providerId.localeCompare(b.providerId);
+
+    return a.modelId.localeCompare(b.modelId);
+  });
+}
+
+export async function upsertModel(model: Model) {
+  await db.models.put(model);
+}
+
+export async function toggleModel(modelId: string, enabled: boolean) {
+  await db.models.update(modelId, { enabled });
+}

@@ -16,11 +16,17 @@ type ChatHistoryRequest struct {
 
 type ChatRequest struct {
 	BaseRequest
-	Message string `json:"message"`
+	Message   string `json:"message"`
+	ModelName string `json:"model_name"`
 }
 
 type ChatRequestPayload struct {
 	Model     string       `json:"model"`
 	Messages  []APIMessage `json:"messages"`
 	MaxTokens int          `json:"max_tokens,omitempty"`
+}
+
+type RenameSessionRequest struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }

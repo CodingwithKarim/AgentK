@@ -47,3 +47,13 @@ func DeleteSession(id string) error {
 
 	return database.DeleteSession(id)
 }
+
+func RenameSession(request *types.RenameSessionRequest) error {
+	if request.ID == "" || request.Name == "" {
+		log.Println("❌ Missing request fields")
+
+		return fmt.Errorf("missing request fields")
+	}
+
+	return database.RenameSession(request.ID, request.Name)
+}

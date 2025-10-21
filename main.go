@@ -32,6 +32,7 @@ func main() {
 	router.POST("/api/clear", api.ClearContextHandler)
 	router.POST("/api/sessions", api.CreateSessionHandler)
 	router.POST("/api/history", api.GetChatHistoryHandler)
+	router.POST("/api/rename", api.RenameSessionHandler)
 	router.DELETE("/api/sessions/:id", api.DeleteSessionHandler)
 
 	// Start server

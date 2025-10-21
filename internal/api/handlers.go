@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log"
 	"net/http"
 
 	chatservice "github.com/CodingWithKarim/AgentK/internal/services/chat"
@@ -87,6 +88,7 @@ func GetChatHistoryHandler(context *gin.Context) {
 
 	// Try Bind JSON from request body to request variable
 	if err := context.ShouldBindJSON(&request); err != nil {
+		log.Println(err.Error())
 		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
@@ -94,6 +96,7 @@ func GetChatHistoryHandler(context *gin.Context) {
 	chatMessages, err := chatservice.FetchChatHistory(&request)
 
 	if err != nil {
+		log.Println(err.Error())
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve messages"})
 		return
 	}
@@ -119,4 +122,20 @@ func PostChatHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"response": responseMessage})
+}
+
+func RenameSessionHandler(context *gin.Context) {
+	var request types.RenameSessionRequest
+
+	if err := context.ShouldBindJSON(&request); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
+		return
+	}
+
+	if err := sessionservice.RenameSession(&request); err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to rename session"})
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{"message": "Session renamed"})
 }

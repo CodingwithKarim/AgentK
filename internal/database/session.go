@@ -55,15 +55,19 @@ func GetSessions() ([]*types.Session, error) {
 
 func DeleteSession(id string) error {
 	// Execute query to delete session from database
-	_, err := database.Exec(
-		"DELETE FROM sessions WHERE id = ?",
-		id,
-	)
-
-	if err != nil {
+	if _, err := database.Exec("DELETE FROM sessions WHERE id = ?", id); err != nil {
 		log.Printf("❌ Failed to delete session %s: %v", id, err)
+		return err
 	}
 
-	// Return err if any
-	return err
+	return nil
+}
+
+func RenameSession(id string, name string) error {
+	if _, err := database.Exec("UPDATE sessions set name = ? where id = ?", name, id); err != nil {
+		log.Printf("❌ Failed to rename session %s: %v", id, err)
+		return err
+	}
+
+	return nil
 }

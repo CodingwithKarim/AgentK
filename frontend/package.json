@@ -13,26 +13,28 @@
     "@headlessui/react": "^2.2.2",
     "@heroicons/react": "^2.2.0",
     "animate.css": "^4.1.1",
+    "dexie": "^4.2.1",
     "framer-motion": "^12.9.1",
+    "lucide-react": "^0.546.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-feather": "^2.0.10",
+    "react-markdown": "^10.1.0",
+    "react-syntax-highlighter": "^15.6.6",
     "react-textarea-autosize": "^8.5.9",
+    "rehype-highlight": "^7.0.2",
+    "remark-gfm": "^4.0.1",
     "sweetalert2": "^11.19.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
-    "@tailwindcss/postcss": "^4.1.4",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
-    "autoprefixer": "^10.4.21",
     "eslint": "^9.22.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
-    "postcss": "^8.5.3",
-    "tailwindcss": "3.4",
     "vite": "^6.3.1"
   }
 }

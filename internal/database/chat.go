@@ -37,10 +37,16 @@ func ClearModelContext(sessionID, modelID string) error {
 
 func GetSessionMessages(sessionID string) ([]types.Message, error) {
 	rows, err := database.Query(`
-        SELECT role, content, timestamp
-        FROM messages
-        WHERE sessionID = ?
-        ORDER BY timestamp ASC
+	SELECT 
+		messages.id,
+		messages.role,
+		messages.content,
+		messages.model,
+		messages.model_name,
+		messages.timestamp
+	FROM messages
+	WHERE messages.sessionID = ?
+	ORDER BY messages.timestamp ASC;
     `, sessionID)
 	if err != nil {
 		return nil, err
@@ -51,7 +57,7 @@ func GetSessionMessages(sessionID string) ([]types.Message, error) {
 
 func GetModelMessages(sessionID, modelID string) ([]types.Message, error) {
 	rows, err := database.Query(`
-        SELECT role, content, timestamp
+        SELECT id, role, content, model, model_name, timestamp
         FROM messages
         WHERE sessionID = ? AND model = ?
         ORDER BY timestamp ASC
@@ -66,11 +72,11 @@ func GetModelMessages(sessionID, modelID string) ([]types.Message, error) {
 	return scanMessages(rows)
 }
 
-func SaveMessage(sessionID, model, role, content string) error {
+func SaveMessage(sessionID, model, modelName, role, content string) error {
 	_, err := database.Exec(`
-		INSERT INTO messages (sessionID, model, role, content)
-		VALUES (?, ?, ?, ?)
-	`, sessionID, model, role, content)
+		INSERT INTO messages (sessionID, model, model_name, role, content)
+		VALUES (?, ?, ?, ?, ?)
+	`, sessionID, model, modelName, role, content)
 
 	if err != nil {
 		log.Printf("❌ Failed to save message: %v", err)
@@ -85,7 +91,7 @@ func scanMessages(rows *sql.Rows) ([]types.Message, error) {
 	for rows.Next() {
 		m := types.Message{}
 
-		if err := rows.Scan(&m.Role, &m.Content, &m.Timestamp); err != nil {
+		if err := rows.Scan(&m.ID, &m.Role, &m.Content, &m.Model, &m.ModelName, &m.Timestamp); err != nil {
 			continue
 		}
 
