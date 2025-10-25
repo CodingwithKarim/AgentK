@@ -290,7 +290,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       {
         role: "assistant",
         text: "",
-        model: selectedModel,
+        model_name: selectedModel,
       }
     ]);
 
@@ -319,7 +319,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const model_name = models.find(model => model.id === selectedModel)?.name ?? "";
 
-      const resp = await sendChatMessage(workingSessionId, selectedModel, model_name, text, sharedContext);
+      const resp = await sendChatMessage(workingSessionId, selectedModel, text, sharedContext);
 
       setChatMessages(prev => {
         const arr = [...prev];

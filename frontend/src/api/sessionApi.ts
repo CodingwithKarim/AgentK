@@ -1,26 +1,47 @@
-import { nanoid } from "nanoid";
 import { Session } from "../utils/types/types";
-import { database as db } from "../db/index";
 
-export async function fetchSessions(): Promise<Session[]> {
-  return db.sessions.orderBy("startedAt").reverse().toArray();
-}
+export const fetchSessions = async (): Promise<Session[]> => {
+    try {
+      const response = await fetch("/api/sessions");
+      const data = await response.json();
+      return Array.isArray(data.sessions) ? data.sessions : [];
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
+  };
+  
+  export const createSession = async (name: string): Promise<Session> => {
+    const response = await fetch("/api/sessions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: name.trim() }),
+    });
+    return await response.json();
+  };
+  
+  export const deleteSession = async (sessionId: string): Promise<boolean> => {
+    try {
+      await fetch(`/api/sessions/${sessionId}`, { method: "DELETE" });
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
+  };
 
-export async function createSession(name: string): Promise<Session> {
-  const id = nanoid();
-  const session: Session = { id, name: name.trim() || "Untitled", startedAt: Date.now() };
-  await db.sessions.put(session);
-  return session;
-}
-
-export async function deleteSession(sessionId: string): Promise<boolean> {
-  await db.transaction("readwrite", db.sessions, db.messages, async () => {
-    await db.messages.where("sessionId").equals(sessionId).delete();
-    await db.sessions.delete(sessionId);
-  });
-  return true;
-}
-
-export async function renameSession(session: Session): Promise<void> {
-  await db.sessions.update(session.id, { name: session.name.trim() || "Untitled" });
-}
+  export const renameSession = async (session: Session): Promise<void> => {
+    try{
+      await fetch("/api/rename", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: session.id,
+          name: session.name
+        })
+      })
+    }
+    catch (error) {
+      console.log(error);
+    }
+  }
