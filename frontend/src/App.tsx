@@ -4,13 +4,19 @@ import MessagesContainer from "./components/Chat/MessagesContainer";
 import ChatInput from "./components/Chat/ChatInput";
 import Header from "./components/Header/Header";
 import ProviderConfig from "./components/ProviderConfig";
+import { useChat } from "./context/ChatContext";
 
 export default function App() {
+    const { setMenuOpen} = useChat();
+
     const [settingsOpen, setSettingsOpen] = useState(false);
 
     if (settingsOpen) {
         return (
-            <ProviderConfigWrapper onClose={() => setSettingsOpen(false)} />
+            <ProviderConfigWrapper onClose={() => {
+                setSettingsOpen(false);
+                setMenuOpen(false);
+            }} />
         );
     }
 

@@ -7,19 +7,28 @@ import {
   Provider
 } from "../utils/types/types";
 import {
-  fetchSessions,
-  createSession,
-  deleteSession,
-  renameSession
-} from "../api/sessionAPI";
-import {
   fetchModels
 } from "../api/modelApi";
 import {
-  fetchChatHistory,
+  // fetchChatHistory,
   sendChatMessage,
-  clearChatContext
+  // clearChatContext
 } from "../api/chatApi";
+import {
+  initializeDB,
+} from "../db/index"
+import {
+  createSession,
+  fetchSessions,
+  deleteSession,
+  renameSession
+} from "../db/sessions"
+import {
+  fetchChatHistory,
+  clearChatContext,
+  addMessage
+} from "../db/messages"
+
 
 type ChatContextType = {
   sessions: Session[];
@@ -44,6 +53,7 @@ type ChatContextType = {
   setInputPrompt: (prompt: string) => void;
   setMenuOpen: (open: boolean) => void;
   setSidebarOpen: (isOpen: boolean) => void;
+  setModels: (models: Model[]) => void;
 
   handleNewChat: () => Promise<void>;
   handlePickSession: (id: string) => void;
@@ -77,7 +87,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const sessionActive = Boolean(selectedSession);
 
   useEffect(() => {
-    fetchSessions().then(setSessions).catch(console.error);
+    initializeDB().then(() => console.log("DB ready")).catch(error => console.log("Failed to init DB", error))
+    fetchSessions().then(setSessions).catch(err => console.log(err))
     fetchModels()
       .then((modelList) => {
         setModels(modelList);
@@ -99,6 +110,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!sessionActive || !selectedModel || isLoading) {
       return;
     }
+
 
     fetchChatHistory(selectedSession, selectedModel, sharedContext)
       .then(setChatMessages)
@@ -170,13 +182,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    const session: Session = {
-      id: id,
-      name: name
-    };
-
     try {
-      await renameSession(session);
+      await renameSession(id, name);
     } catch (error) {
       console.error(error);
       return;
@@ -276,10 +283,15 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setIsLoading(true);
     setInputPrompt("");
+
+    const userId = makeId();
+    const assistantId = makeId();
+    const ts = Date.now();
+
     setChatMessages(prev => [
       ...prev,
       {
-
+        id: userId,
         role: "user",
         text,
       }
@@ -288,6 +300,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setChatMessages(prev => [
       ...prev,
       {
+        id: assistantId,
         role: "assistant",
         text: "",
         model_name: selectedModel,
@@ -317,19 +330,38 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      const model_name = models.find(model => model.id === selectedModel)?.name ?? "";
+      const modelName = models.find(model => model.id === selectedModel)?.name ?? "";
 
+      await addMessage({
+        sessionId: workingSessionId,
+        role: "user",
+        content: text,
+        modelId: selectedModel,
+        modelName,
+        ts
+      });
+
+      console.log("SelectedModel", selectedModel)
       const resp = await sendChatMessage(workingSessionId, selectedModel, text, sharedContext);
 
       setChatMessages(prev => {
         const arr = [...prev];
         for (let i = arr.length - 1; i >= 0; i--) {
           if (arr[i].role === "assistant") {
-            arr[i] = { ...arr[i], text: resp, model_name: model_name };
+            arr[i] = { ...arr[i], text: resp, model_name: modelName };
             break;
           }
         }
         return arr;
+      });
+
+      await addMessage({
+        sessionId: workingSessionId,
+        role: "assistant",
+        content: resp,
+        modelId: selectedModel,
+        modelName,
+        ts: Date.now()
       });
 
       setSessions(prev => prev.map(s => (s.id === workingSessionId ? { ...s } : s)));
@@ -375,6 +407,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setInputPrompt,
     setMenuOpen,
     setSidebarOpen,
+    setModels,
 
     handleNewChat,
     handlePickSession,
@@ -413,4 +446,8 @@ function generateTitleFromText(text: string) {
   const titleRaw = words.slice(0, 8).join(" ");
   const titleCased = titleRaw.replace(/\w\S*/g, s => s[0].toUpperCase() + s.slice(1));
   return titleCased.length <= 36 ? titleCased : titleCased.slice(0, 35).trimEnd() + "…";
+}
+
+function makeId() {
+  return (crypto?.randomUUID?.() ?? `tmp-${Math.random().toString(36).slice(2)}`);
 }

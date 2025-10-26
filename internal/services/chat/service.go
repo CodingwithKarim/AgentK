@@ -35,7 +35,6 @@ func FetchChatHistory(request *types.ChatHistoryRequest) ([]types.Message, error
 }
 
 func PostChatMessage(request *types.ChatRequest) (string, error) {
-	// Validate the request
 	if err := validateChatRequest(request); err != nil {
 		return "", err
 	}
@@ -47,27 +46,13 @@ func PostChatMessage(request *types.ChatRequest) (string, error) {
 		return "", err
 	}
 
-	// Get chat history
-	chatMessages, err := getMessageHistory(request)
-
-	if err != nil {
-		return "", err
-	}
-
-	// Build & trim history + prompt, count tokens used
-	apiMessages := toAPI(chatMessages, request.Message)
-
-	// Call the LLM
-	reply, err := callModelProvider(request.ModelID, modelConfig, apiMessages)
+	reply, err := callModelProvider(request.ModelID, modelConfig, request.Context)
 
 	if err != nil {
 		log.Printf("❌ Error calling model %q for session %q: %v",
 			request.ModelID, request.SessionID, err)
 		return "", err
 	}
-
-	// Save messages to database
-	saveMessagePair(request.SessionID, request.ModelID, request.ModelName, request.Message, reply)
 
 	return reply, nil
 }

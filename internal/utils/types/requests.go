@@ -16,8 +16,9 @@ type ChatHistoryRequest struct {
 
 type ChatRequest struct {
 	BaseRequest
-	Message   string `json:"message"`
-	ModelName string `json:"model_name"`
+	Message   string       `json:"message"`
+	ModelName string       `json:"model_name"`
+	Context   []APIMessage `json:"context"`
 }
 
 type ChatRequestPayload struct {

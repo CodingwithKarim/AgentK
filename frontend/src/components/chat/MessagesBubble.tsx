@@ -24,7 +24,6 @@ export default function MessageBubble({ chatMessage }: MessageBubbleProps) {
         {children}
       </strong>
     ),
-    // keep inline code readable
     code: ({ inline, children, ...props }: MarkdownCodeProps) =>
       inline ? (
         <code
@@ -34,7 +33,6 @@ export default function MessageBubble({ chatMessage }: MessageBubbleProps) {
           {children}
         </code>
       ) : (
-        // fallback; we'll also enforce via scoped selectors on the wrapper
         <pre
           className="bg-zinc-100 dark:bg-zinc-800 p-3 rounded-lg text-sm"
           {...props}
@@ -46,9 +44,6 @@ export default function MessageBubble({ chatMessage }: MessageBubbleProps) {
     p: ({ children }) => <p className="mb-2 leading-relaxed">{children}</p>,
   };
 
-  // NOTE:
-  // - max-w-[min(95vw,44rem)] keeps bubbles within viewport on phones
-  // - [&_pre]/[&_code] rules force-wrap and cap width, beating prose defaults
   const bubbleBase =
     "px-5 py-3 leading-relaxed border rounded-2xl shadow-sm transition-all " +
     "prose prose-zinc dark:prose-invert text-[16px] break-words " +
@@ -61,6 +56,10 @@ export default function MessageBubble({ chatMessage }: MessageBubbleProps) {
   const userStyle =
     "bg-blue-50 border-blue-100 text-zinc-900 dark:bg-blue-900 dark:border-blue-800 dark:text-zinc-100";
 
+  const modelHeaderClass = isLoading
+    ? "h-4 w-0 overflow-hidden mb-1 ml-1 select-none"
+    : "text-[11px] text-zinc-400 dark:text-zinc-500 mb-1 ml-1 select-none";
+
   return (
     <div
       className={`animate-fadeIn w-full flex mb-4 ${
@@ -68,14 +67,17 @@ export default function MessageBubble({ chatMessage }: MessageBubbleProps) {
       }`}
     >
       <div className="text-[11px] text-zinc-500/90 dark:text-zinc-400/90">
-        {!isUser && chatMessage.model_name && (
-          <div className="text-[11px] text-zinc-400 dark:text-zinc-500 mb-1 ml-1 select-none">
-            {chatMessage.model_name}
+        {!isUser && (
+          <div className={modelHeaderClass}>
+            {isLoading ? "" : chatMessage.model_name ?? ""}
           </div>
         )}
 
         <div className={`${bubbleBase} ${isUser ? userStyle : assistantStyle}`}>
-          <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={markdownComponents}
+          >
             {chatMessage.text || ""}
           </ReactMarkdown>
         </div>
