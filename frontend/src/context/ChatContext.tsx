@@ -10,9 +10,7 @@ import {
   fetchModels
 } from "../api/modelApi";
 import {
-  // fetchChatHistory,
   sendChatMessage,
-  // clearChatContext
 } from "../api/chatApi";
 import {
   initializeDB,
@@ -26,7 +24,9 @@ import {
 import {
   fetchChatHistory,
   clearChatContext,
-  addMessage
+  addMessage,
+  deleteMessage,
+  trimAfterMessage,
 } from "../db/messages"
 
 
@@ -46,6 +46,8 @@ type ChatContextType = {
   inputPrompt: string;
   isLoading: boolean;
   menuOpen: boolean;
+  maxTokens: number;
+  mode: "auto" | "custom";
 
   setSelectedSession: (id: string) => void;
   setSelectedModel: (id: string) => void;
@@ -53,7 +55,9 @@ type ChatContextType = {
   setInputPrompt: (prompt: string) => void;
   setMenuOpen: (open: boolean) => void;
   setSidebarOpen: (isOpen: boolean) => void;
-  setModels: (models: Model[]) => void;
+  setModels: React.Dispatch<React.SetStateAction<Model[]>>
+  setMaxTokens: React.Dispatch<React.SetStateAction<number>>
+  setMode: React.Dispatch<React.SetStateAction<"auto" | "custom">>
 
   handleNewChat: () => Promise<void>;
   handlePickSession: (id: string) => void;
@@ -61,6 +65,8 @@ type ChatContextType = {
   handleDeleteSession: (id: string) => Promise<void>;
   handleClearContext: () => Promise<void>;
   handleSubmit: () => Promise<void>;
+  handleDeleteMessage: (id: string) => Promise<void>;
+  handleResubmitFromMessage: (clickedId: string) => Promise<void>;
 };
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -77,12 +83,19 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [sharedContext, setSharedContext] = useState<boolean>(false);
   const [inputPrompt, setInputPrompt] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [maxTokens, setMaxTokens] = useState(1000);
+  const [mode, setMode] = useState<"auto" | "custom">("auto");
 
   const menuRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const sideBarRef = useRef<HTMLDivElement>(null);
+
+const modeRef = useRef(mode);
+const maxTokensRef = useRef(maxTokens);
+useEffect(() => { modeRef.current = mode; }, [mode]);
+useEffect(() => { maxTokensRef.current = maxTokens; }, [maxTokens]);
 
   const sessionActive = Boolean(selectedSession);
 
@@ -111,7 +124,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-
     fetchChatHistory(selectedSession, selectedModel, sharedContext)
       .then(setChatMessages)
       .catch(console.error);
@@ -134,6 +146,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [sidebarOpen]);
 
+  const handleDeleteMessage = async (id: string) => {
+    setChatMessages((prev) => prev.filter((msg) => msg.id !== id));
+    await deleteMessage(id);
+  };
+
   const handleNewChat = async () => {
     setSelectedSession("");
     setChatMessages([]);
@@ -141,7 +158,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSidebarOpen(false);
   };
 
-  const handlePickSession = (id: string) => {
+  const handlePickSession = async (id: string) => {
     setSelectedSession(id);
     setInputPrompt("");
     setSidebarOpen(false);
@@ -277,6 +294,73 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  async function handleResubmitFromMessage(clickedId: string) {
+    const snapshot = [...chatMessages];
+    const idx = snapshot.findIndex(m => m.id === clickedId);
+    if (idx === -1) return;
+    const clicked = snapshot[idx];
+    if (clicked.role !== "user") return;
+
+    const uiContext = snapshot.slice(0, idx + 1);
+    setChatMessages(uiContext);
+
+    try {
+      await trimAfterMessage({
+        sessionId: selectedSession,
+        clickedId,
+        sharedContext,
+        modelId: selectedModel,
+      });
+    } catch (e) {
+      console.error("DB trim failed:", e);
+    }
+
+    const model = models.find(m => m.id === selectedModel);
+    const modelName = model?.name ?? "";
+    const modelProvider = model?.provider ?? "";
+    const tempId = "temp-" + Date.now();
+    const placeholderTs = Date.now();
+
+    setChatMessages(prev => [
+      ...prev,
+      { id: tempId, role: "assistant", text: "", model_name: modelName || selectedModel, ts: placeholderTs, pending: true }
+    ]);
+
+    console.log("Max Tokens: ", maxTokens)
+    console.log("Mode: ", mode);
+
+    const tokens = modeRef.current === "custom" ? maxTokensRef.current : 0;
+
+    console.log("FInal tokens: ", tokens)
+
+    try {
+      const resp = await sendChatMessage(
+        selectedSession,
+        selectedModel,
+        modelProvider,
+        clicked.text ?? "",
+        sharedContext,
+        tokens
+      );
+
+      const pk = await addMessage({
+        sessionId: selectedSession,
+        role: "assistant",
+        content: resp,
+        modelId: selectedModel,
+        modelName,
+        ts: Date.now(),
+      });
+
+      setChatMessages(prev =>
+        prev.map(m => (m.id === tempId ? { ...m, id: String(pk), text: resp, model_name: modelName, pending: false } : m))
+      );
+    } catch (err) {
+      console.error("Resubmit failed:", err);
+      setChatMessages(prev => prev.filter(m => m.id !== tempId));
+    }
+  }
+
   const handleSubmit = async () => {
     const text = inputPrompt.trim();
     if (!text || isLoading || !selectedModel) return;
@@ -284,29 +368,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     setInputPrompt("");
 
-    const userId = makeId();
-    const assistantId = makeId();
     const ts = Date.now();
-
-    setChatMessages(prev => [
-      ...prev,
-      {
-        id: userId,
-        role: "user",
-        text,
-      }
-    ]);
-
-    setChatMessages(prev => [
-      ...prev,
-      {
-        id: assistantId,
-        role: "assistant",
-        text: "",
-        model_name: selectedModel,
-      }
-    ]);
-
+    
     let workingSessionId = selectedSession;
     if (!workingSessionId) {
       try {
@@ -321,7 +384,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setChatMessages(prev => {
           const arr = [...prev];
           const idx = arr.findIndex(m => m.role === "assistant" && m.text === "");
-          if (idx !== -1) arr[idx] = { ...arr[idx], text: "[Error creating session]" };
+          if (idx !== -1) {
+            arr[idx] = { ...arr[idx], text: "[Error creating session]" };
+          }
           return arr;
         });
         setIsLoading(false);
@@ -330,49 +395,90 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      const modelName = models.find(model => model.id === selectedModel)?.name ?? "";
+      const selected = models.find(m => m.id === selectedModel);
+      const modelName = selected?.name ?? "";
+      const modelProvider = selected?.provider ?? "";
 
-      await addMessage({
+      const userPk = await addMessage({
         sessionId: workingSessionId,
         role: "user",
         content: text,
         modelId: selectedModel,
         modelName,
-        ts
+        ts,
       });
 
-      console.log("SelectedModel", selectedModel)
-      const resp = await sendChatMessage(workingSessionId, selectedModel, text, sharedContext);
+      setChatMessages(prev => [
+        ...prev,
+        {
+          id: String(userPk),
+          role: "user",
+          text,
+          model_name: undefined,
+        },
+      ]);
 
-      setChatMessages(prev => {
-        const arr = [...prev];
-        for (let i = arr.length - 1; i >= 0; i--) {
-          if (arr[i].role === "assistant") {
-            arr[i] = { ...arr[i], text: resp, model_name: modelName };
-            break;
-          }
-        }
-        return arr;
-      });
+      const tempAssistantId = "temp-" + Date.now();
+      setChatMessages(prev => [
+        ...prev,
+        {
+          id: tempAssistantId,
+          role: "assistant",
+          text: "",
+          model_name: modelName || selectedModel,
+          pending: true
+        },
+      ]);
 
-      await addMessage({
+      const tokens = modeRef.current === "custom" ? maxTokensRef.current : 0;
+
+      const resp = await sendChatMessage(
+        workingSessionId,
+        selectedModel,
+        modelProvider,
+        text,
+        sharedContext,
+        tokens
+      );
+
+      const assistantPk = await addMessage({
         sessionId: workingSessionId,
         role: "assistant",
         content: resp,
         modelId: selectedModel,
         modelName,
-        ts: Date.now()
+        ts: Date.now(),
+      });
+
+      setChatMessages(prev => {
+        return prev.map(m => {
+          if (m.id === tempAssistantId) {
+            return {
+              id: String(assistantPk),
+              role: "assistant",
+              text: resp,
+              model_name: modelName,
+              pending: false
+            };
+          }
+          return m;
+        });
       });
 
       setSessions(prev => prev.map(s => (s.id === workingSessionId ? { ...s } : s)));
-
     } catch (e: any) {
       console.error(e);
       setChatMessages(prev => {
         const arr = [...prev];
         for (let i = arr.length - 1; i >= 0; i--) {
           if (arr[i].role === "assistant") {
-            arr[i] = { ...arr[i], text: (arr[i].text || "") + `\n[Error: ${e?.message || "send failed"}]` };
+            arr[i] = {
+              ...arr[i],
+              pending: false,
+              text:
+                (arr[i].text || "") +
+                `\n[Error: ${e?.message || "send failed"}]`,
+            };
             break;
           }
         }
@@ -383,6 +489,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       abortRef.current = null;
     }
   };
+
 
   const value: ChatContextType = {
     sessions,
@@ -400,6 +507,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isLoading,
     menuOpen,
     sidebarOpen,
+    maxTokens,
+    mode,
 
     setSelectedSession,
     setSelectedModel,
@@ -408,6 +517,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setMenuOpen,
     setSidebarOpen,
     setModels,
+    setMaxTokens,
+    setMode,
 
     handleNewChat,
     handlePickSession,
@@ -415,6 +526,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     handleDeleteSession,
     handleClearContext,
     handleSubmit,
+    handleDeleteMessage,
+    handleResubmitFromMessage,
   };
 
   const isSwalOpen = () => document.body.classList.contains("swal2-shown");
@@ -446,8 +559,4 @@ function generateTitleFromText(text: string) {
   const titleRaw = words.slice(0, 8).join(" ");
   const titleCased = titleRaw.replace(/\w\S*/g, s => s[0].toUpperCase() + s.slice(1));
   return titleCased.length <= 36 ? titleCased : titleCased.slice(0, 35).trimEnd() + "…";
-}
-
-function makeId() {
-  return (crypto?.randomUUID?.() ?? `tmp-${Math.random().toString(36).slice(2)}`);
 }

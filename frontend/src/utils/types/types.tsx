@@ -23,6 +23,7 @@ export type ChatMessage = {
   time?: string;
   text: string;
   model_name?: string;
+  pending?: boolean
 };
 
  export type MessageRow = {
@@ -35,6 +36,6 @@ export type ChatMessage = {
   ts: number;                    // epoch ms
 };
 
-export type Provider = "OpenAI" | "Anthropic" | "Google" |  "Groq" | "Perplexity" | "Cohere" | "HuggingFace" | ""
+export type Provider = "OpenAI" | "Anthropic" | "Google" |  "Groq" | "Perplexity" | "Cohere" | "HuggingFace" | "xAI" | "OpenRouter" | "DeepInfra" | ""
 
 export type Role = "user" | "assistant";

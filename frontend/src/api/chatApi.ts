@@ -1,24 +1,29 @@
 import { fetchChatHistory } from "../db/messages";
+import { Provider } from "../utils/types/types";
 
 type ChatAPIMessage = { role: "user" | "assistant"; content: string; ts?: number };
 
 export const sendChatMessage = async (
     sessionID: string,
     modelID: string,
+    provider: Provider,
     message: string,
     sharedContext: boolean,
+    tokens: number
   ): Promise<string> => {
     const context = await buildContext(sessionID, modelID, sharedContext)
+
+    console.log("Context:", context)
 
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        sessionID,
         modelID,
+        provider,
         message,
-        sharedContext,
-        context
+        context,
+        tokens
       }),
     });
     if (!res.ok) throw new Error("Failed to send message");

@@ -1,6 +1,76 @@
 import Dexie from "dexie";
 import { database as db } from "./index";
 import type { MessageRow, Role, ChatMessage } from "../utils/types/types"; 
+import { nanoid } from "nanoid";
+
+export async function getMessageById(id: string | number): Promise<MessageRow | undefined> {
+  const pk = typeof id === "number" ? id : Number(id);
+  if (!Number.isFinite(pk)) return undefined;
+  return db.messages.get(pk);
+}
+
+export async function getContextUpToMessage(params: {
+  sessionId: string;
+  clickedId: string | number;
+  sharedContext: boolean;
+  modelId: string;
+}): Promise<{ context: ChatMessage[]; clicked?: MessageRow }> {
+  const clicked = await getMessageById(params.clickedId);
+  if (!clicked || clicked.sessionId !== params.sessionId) {
+    return { context: [] };
+  }
+
+  const cutoffTs = clicked.ts ?? 0;
+
+  const rows = params.sharedContext
+    ? await db.messages
+        .where("[sessionId+ts]")
+        .between([params.sessionId, Dexie.minKey], [params.sessionId, cutoffTs], true, true)
+        .toArray()
+    : await db.messages
+        .where("[sessionId+modelId+ts]")
+        .between([params.sessionId, params.modelId, Dexie.minKey], [
+          params.sessionId,
+          params.modelId,
+          cutoffTs,
+        ], true, true)
+        .toArray();
+
+  return { context: rows.map(rowToChat), clicked };
+}
+
+export async function trimAfterMessage(params: {
+  sessionId: string;
+  clickedId: string | number;
+  sharedContext: boolean;
+  modelId: string;
+}): Promise<number> {
+  const clicked = await getMessageById(params.clickedId);
+  if (!clicked || clicked.sessionId !== params.sessionId) return 0;
+
+  const cutoffTs = clicked.ts ?? 0;
+
+  // Build a collection for "after" items
+  const afterCollection = params.sharedContext
+    ? db.messages
+        .where("[sessionId+ts]")
+        .between([params.sessionId, cutoffTs], [params.sessionId, Dexie.maxKey])
+        .and((m) => (m.ts ?? 0) > cutoffTs)
+    : db.messages
+        .where("[sessionId+modelId+ts]")
+        .between([params.sessionId, params.modelId, cutoffTs], [
+          params.sessionId,
+          params.modelId,
+          Dexie.maxKey,
+        ])
+        .and((m) => (m.ts ?? 0) > cutoffTs);
+
+  const pks = await afterCollection.primaryKeys();
+  if (pks.length === 0) return 0;
+
+  await db.messages.bulkDelete(pks);
+  return pks.length;
+}
 
 export async function fetchChatHistory(
   sessionID: string,
@@ -35,6 +105,7 @@ export function addMessage(args: {
     modelName: args.modelName ?? "",
     ts: args.ts ?? Date.now(),
   };
+
   return db.messages.add(row);
 }
 
@@ -68,10 +139,13 @@ export async function clearSessionForModel(sessionId: string, modelId: string) {
   return db.messages.bulkDelete(pks);
 }
 
+export async function deleteMessage(id: string){
+  await db.messages.delete(Number(id));
+}
 
 function rowToChat(m: MessageRow): ChatMessage {
   return {
-    id: String(m.id ?? crypto.randomUUID()),
+    id: String(m.id),
     role: m.role,
     text: m.content,
     model_name: m.modelName,

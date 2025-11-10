@@ -2,56 +2,126 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"strings"
+	"sync"
 
+	"github.com/CodingWithKarim/AgentK/internal/services/anthropic"
+	"github.com/CodingWithKarim/AgentK/internal/services/openaicompatible"
+	"github.com/CodingWithKarim/AgentK/internal/utils"
 	"github.com/CodingWithKarim/AgentK/internal/utils/types"
 )
 
+type channelResult struct {
+	provider types.Provider
+	config   *types.ProviderConfig
+}
+
 var (
-	ProviderConfigs map[types.Provider]*providerConfig
-	ModelRegistry   map[string]*types.ModelConfig
+	ProviderConfigsMu sync.RWMutex
+	ProviderConfigs   map[types.Provider]*types.ProviderConfig
 )
 
-type providerConfig struct {
-	APIKey   string                        `json:"apiKey"`
-	Endpoint string                        `json:"endpoint"`
-	Models   map[string]*types.ModelConfig `json:"models"`
-}
-
-type jsonLayout struct {
-	Providers map[types.Provider]*providerConfig `json:"Providers"`
-}
-
 func LoadConfig() error {
-	// Read the config file
-	data, err := os.ReadFile("config.json")
+	ProviderConfigsMu.Lock()
+	ProviderConfigs = make(map[types.Provider]*types.ProviderConfig)
+	ProviderConfigsMu.Unlock()
 
-	if err != nil {
-		return fmt.Errorf("could not read config: %w", err)
+	waitGroup := &sync.WaitGroup{}
+	channel := make(chan *channelResult)
+
+	for _, providerName := range utils.Providers {
+		waitGroup.Add(1)
+
+		go func(providerName types.Provider) {
+			defer waitGroup.Done()
+			endpoints := utils.ProviderEndpointsMap[providerName]
+
+			providerConfig := &types.ProviderConfig{
+				Endpoints: endpoints,
+				Models:    make(map[string]*types.Model),
+			}
+
+			key := os.Getenv(fmt.Sprintf("%s_API_KEY", strings.ToUpper(string(providerName))))
+
+			if key == "" {
+				return
+			}
+
+			if err := loadProvider(providerName, providerConfig, key); err != nil {
+				log.Printf("Failed to load provider: %s", providerName)
+			}
+
+			log.Printf(`[LoadModels] provider=%s`, providerName)
+
+			channel <- &channelResult{
+				provider: providerName,
+				config:   providerConfig,
+			}
+
+		}(providerName)
 	}
 
-	// Parse the config file into go struct
-	config, err := parseConfig(data)
+	go func() {
+		waitGroup.Wait()
+		close(channel)
+	}()
 
-	if err != nil {
-		return fmt.Errorf("invalid config: %w", err)
+	for result := range channel {
+		ProviderConfigs[result.provider] = result.config
 	}
 
-	ProviderConfigs = make(map[types.Provider]*providerConfig)
-	ModelRegistry = make(map[string]*types.ModelConfig)
+	debugCount()
 
-	// Iterate over the providers and load their models
-	for providerName, provider := range config.Providers {
-		if provider.APIKey == "" {
-			continue
-		}
+	return nil
+}
 
-		// Load the models for the provider
-		if err := loadProvider(providerName, provider); err != nil {
-			continue
-		}
+func debugCount() {
+	totalCnt := 0
 
-		ProviderConfigs[providerName] = provider
+	ProviderConfigsMu.RLock()
+
+	for _, cfg := range ProviderConfigs {
+		totalCnt += len(cfg.Models)
+	}
+
+	ProviderConfigsMu.RUnlock()
+
+	log.Printf("Total model count is %d models", totalCnt)
+}
+
+func loadProvider(providerName types.Provider, providerConfig *types.ProviderConfig, key string) error {
+	if providerConfig.Models == nil {
+		providerConfig.Models = make(map[string]*types.Model)
+	}
+
+	endpoint := providerConfig.Endpoints.BaseURL
+
+	if providerConfig.Endpoints.ModelEndpoint != "" {
+		endpoint = providerConfig.Endpoints.ModelEndpoint
+	}
+
+	var (
+		models []*types.Model
+		err    error
+	)
+
+	switch providerName {
+	case utils.ANTHROPIC:
+		models, err = anthropic.LoadModels(key, providerName)
+	case utils.PERPLEXITY:
+		models = loadStaticModels()
+	default:
+		models, err = openaicompatible.LoadModels(key, endpoint, providerName)
+	}
+	if err != nil {
+		log.Println("[LoadModels] provider=", providerName, "error:", err)
+		return err
+	}
+
+	for _, m := range models {
+		providerConfig.Models[m.ID] = m
 	}
 
 	return nil

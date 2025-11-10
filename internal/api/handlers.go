@@ -1,141 +1,43 @@
 package api
 
 import (
-	"log"
+	"encoding/json"
 	"net/http"
 
 	chatservice "github.com/CodingWithKarim/AgentK/internal/services/chat"
-	sessionservice "github.com/CodingWithKarim/AgentK/internal/services/session"
 	"github.com/CodingWithKarim/AgentK/internal/utils/types"
-	"github.com/gin-gonic/gin"
 )
 
-func GetModelsHandler(context *gin.Context) {
-	// Retrieve models from config file and return to client as JSON
-	context.JSON(http.StatusOK, types.ModelsResponse{
+func ChatHandler(response http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodPost {
+		http.Error(response, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req types.ChatRequest
+
+	if err := json.NewDecoder(request.Body).Decode(&req); err != nil {
+		writeError(response, http.StatusBadRequest, "Invalid JSON")
+		return
+	}
+
+	responseMessage, err := chatservice.PostChatMessage(&req)
+
+	if err != nil {
+		writeError(response, http.StatusInternalServerError, "Unable to process chat message")
+		return
+	}
+
+	writeJSON(response, http.StatusOK, map[string]any{"response": responseMessage})
+}
+
+func ModelsHandler(response http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodGet {
+		http.Error(response, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	writeJSON(response, http.StatusOK, types.GetModelsResponse{
 		Models: chatservice.GetUIModels(),
 	})
-}
-
-func GetSessionsHandler(context *gin.Context) {
-	// Retrieve sessions from session service
-	sessions, err := sessionservice.GetAllSessions()
-
-	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to retrieve sessions",
-		})
-		return
-	}
-
-	// Return sessions response as JSON
-	context.JSON(http.StatusOK, sessions)
-}
-
-func CreateSessionHandler(context *gin.Context) {
-	// Init session variable
-	var request types.Session
-
-	// Try Bind JSON from request body to session variable
-	if err := context.ShouldBindJSON(&request); err != nil || request.Name == "" {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "Name is required"})
-		return
-	}
-
-	// Create new session
-	session, err := sessionservice.CreateSession(request.Name)
-
-	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create session"})
-		return
-	}
-
-	// Send session back to client as JSON
-	context.JSON(http.StatusOK, session)
-}
-
-func DeleteSessionHandler(context *gin.Context) {
-	// Delete session
-	if err := sessionservice.DeleteSession(context.Param("id")); err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete session"})
-		return
-	}
-
-	// Return success message
-	context.JSON(http.StatusOK, gin.H{"message": "Session deleted"})
-
-}
-
-func ClearContextHandler(context *gin.Context) {
-	var request types.ClearContextRequest
-
-	if err := context.ShouldBindJSON(&request); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
-		return
-	}
-
-	if err := chatservice.ClearChatContext(&request); err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to clear context"})
-		return
-	}
-
-	context.JSON(http.StatusOK, gin.H{"message": "Context cleared"})
-}
-
-func GetChatHistoryHandler(context *gin.Context) {
-	// Init request variable
-	var request types.ChatHistoryRequest
-
-	// Try Bind JSON from request body to request variable
-	if err := context.ShouldBindJSON(&request); err != nil {
-		log.Println(err.Error())
-		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
-		return
-	}
-
-	chatMessages, err := chatservice.FetchChatHistory(&request)
-
-	if err != nil {
-		log.Println(err.Error())
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve messages"})
-		return
-	}
-
-	context.JSON(http.StatusOK, gin.H{
-		"messages": chatMessages,
-	})
-}
-
-func PostChatHandler(c *gin.Context) {
-	var request types.ChatRequest
-
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
-		return
-	}
-
-	responseMessage, err := chatservice.PostChatMessage(&request)
-
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to process chat message"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"response": responseMessage})
-}
-
-func RenameSessionHandler(context *gin.Context) {
-	var request types.RenameSessionRequest
-
-	if err := context.ShouldBindJSON(&request); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
-		return
-	}
-
-	if err := sessionservice.RenameSession(&request); err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to rename session"})
-		return
-	}
-
-	context.JSON(http.StatusOK, gin.H{"message": "Session renamed"})
 }

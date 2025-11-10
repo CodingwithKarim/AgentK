@@ -8,15 +8,10 @@ export function listModels(provider?: string): Promise<Model[]> {
 }
 
 export async function saveAllModels(models: Model[]) {
+  await db.models.clear()
   return db.models.bulkPut(models);
 }
 
-export function toggleModel(id: string, enabled: boolean) {
-  return db.models.update(id, { enabled });
+export function deleteModel(provider: string, id: string) {
+  return db.models.where('[provider+id]').equals([provider, id]).delete();
 }
-
-export function upsertModel(m: Model) {
-  return db.models.put(m);
-}
-
-

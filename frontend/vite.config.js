@@ -6,6 +6,10 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': 'http://localhost:3000',
-    }
+    },
+    host: true,
+    allowedHosts: [
+      'superciliary-velia-restrainingly.ngrok-free.dev'
+    ],
   }
 })

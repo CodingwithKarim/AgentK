@@ -1,40 +1,51 @@
 package main
 
 import (
+	"embed"
+	"io/fs"
 	"log"
+	"net/http"
+	"os"
 
 	"github.com/CodingWithKarim/AgentK/internal/api"
 	"github.com/CodingWithKarim/AgentK/internal/config"
-	"github.com/CodingWithKarim/AgentK/internal/database"
-	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
+//go:embed all:frontend/dist
+var embeddedFiles embed.FS
+
 func main() {
-	// Load configuration for models + APIKeys
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found (using system environment)")
+	}
+
 	if err := config.LoadConfig(); err != nil {
 		log.Fatal("❌ Failed to load config:", err)
 	}
 
-	// Initialize database
-	if err := database.Initialize("app.db"); err != nil {
-		log.Fatal("❌ Failed to initialize database:", err)
+	http.HandleFunc("/api/models", api.ModelsHandler)
+	http.HandleFunc("/api/chat", api.ChatHandler)
+	http.HandleFunc("/api/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("ok"))
+	})
+
+	fsys, err := fs.Sub(embeddedFiles, "frontend/dist")
+
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	defer database.Close()
+	http.Handle("/", http.FileServer(http.FS(fsys)))
 
-	// Create a gin router to handle requests
-	router := gin.Default()
+	port := os.Getenv("PORT")
 
-	// Set up routes
-	router.GET("/api/sessions", api.GetSessionsHandler)
-	router.GET("/api/models", api.GetModelsHandler)
-	router.POST("/api/chat", api.PostChatHandler)
-	router.POST("/api/clear", api.ClearContextHandler)
-	router.POST("/api/sessions", api.CreateSessionHandler)
-	router.POST("/api/history", api.GetChatHistoryHandler)
-	router.POST("/api/rename", api.RenameSessionHandler)
-	router.DELETE("/api/sessions/:id", api.DeleteSessionHandler)
+	if port == "" {
+		port = "8080"
+	}
 
-	// Start server
-	router.Run(":3000")
+	if err := http.ListenAndServe("0.0.0.0:"+port, nil); err != nil {
+		log.Fatal(err)
+	}
 }
