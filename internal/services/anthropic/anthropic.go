@@ -3,6 +3,7 @@ package anthropic
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/CodingWithKarim/AgentK/internal/utils/types"
 	"github.com/anthropics/anthropic-sdk-go"
@@ -14,19 +15,19 @@ func GenerateChatCompletion(model, key string, messages []anthropic.MessageParam
 		option.WithAPIKey(key),
 	)
 
-	ctx := context.Background()
-
-	resp, err := client.Messages.New(ctx, buildMessageParams(model, tokens, messages))
+	response, err := client.Messages.New(context.Background(), buildMessageParams(model, tokens, messages))
 
 	if err != nil {
 		return "", fmt.Errorf("anthropic API error: %w", err)
 	}
 
-	if len(resp.Content) == 0 {
+	if len(response.Content) == 0 {
+		log.Printf("Anthropic response content is empty: %+v", response)
+
 		return "", fmt.Errorf("no content in response")
 	}
 
-	return resp.Content[0].Text, nil
+	return response.Content[0].Text, nil
 }
 
 func LoadModels(apiKey string, providerName types.Provider) ([]*types.Model, error) {
@@ -46,17 +47,17 @@ func LoadModels(apiKey string, providerName types.Provider) ([]*types.Model, err
 		return nil, fmt.Errorf("%s model list failed: %w", providerName, err)
 	}
 
-	out := make([]*types.Model, 0, len(resp.Data))
+	models := make([]*types.Model, 0, len(resp.Data))
 
 	for _, m := range resp.Data {
 		id := m.ID
 
-		out = append(out, &types.Model{
+		models = append(models, &types.Model{
 			ID:      id,
 			Name:    id,
 			Enabled: true,
 		})
 	}
 
-	return out, nil
+	return models, nil
 }

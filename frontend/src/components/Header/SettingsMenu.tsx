@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useCallback } from "react";
 import { ResetIcon } from "../icons/icons";
 
 interface MenuProps {
-  id?: string; // for aria-controls link from trigger
+  id?: string;
   onReset: () => void;
   sharedContext: boolean;
   setSharedContext: (checked: boolean) => void;
@@ -20,7 +20,6 @@ export const Menu = React.memo(function Menu({
 }: MenuProps) {
   const popRef = useRef<HTMLDivElement>(null);
 
-  // Stable handlers
   const handleDocClick = useCallback(
     (e: MouseEvent) => {
       if (!onClose) return;

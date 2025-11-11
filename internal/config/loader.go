@@ -77,20 +77,6 @@ func LoadConfig() error {
 	return nil
 }
 
-func debugCount() {
-	totalCnt := 0
-
-	ProviderConfigsMu.RLock()
-
-	for _, cfg := range ProviderConfigs {
-		totalCnt += len(cfg.Models)
-	}
-
-	ProviderConfigsMu.RUnlock()
-
-	log.Printf("Total model count is %d models", totalCnt)
-}
-
 func loadProvider(providerName types.Provider, providerConfig *types.ProviderConfig, key string) error {
 	if providerConfig.Models == nil {
 		providerConfig.Models = make(map[string]*types.Model)

@@ -14,14 +14,17 @@ func ChatHandler(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	var req types.ChatRequest
+	chatRequest := &types.ChatRequest{}
 
-	if err := json.NewDecoder(request.Body).Decode(&req); err != nil {
+	decoder := json.NewDecoder(http.MaxBytesReader(response, request.Body, 1<<20))
+	decoder.DisallowUnknownFields()
+
+	if err := decoder.Decode(chatRequest); err != nil {
 		writeError(response, http.StatusBadRequest, "Invalid JSON")
 		return
 	}
 
-	responseMessage, err := chatservice.PostChatMessage(&req)
+	responseMessage, err := chatservice.PostChatMessage(chatRequest)
 
 	if err != nil {
 		writeError(response, http.StatusInternalServerError, "Unable to process chat message")

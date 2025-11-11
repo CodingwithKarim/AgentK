@@ -1,7 +1,6 @@
 import Dexie from "dexie";
 import { database as db } from "./index";
 import type { MessageRow, Role, ChatMessage } from "../utils/types/types"; 
-import { nanoid } from "nanoid";
 
 export async function getMessageById(id: string | number): Promise<MessageRow | undefined> {
   const pk = typeof id === "number" ? id : Number(id);

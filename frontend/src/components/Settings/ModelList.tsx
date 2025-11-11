@@ -35,12 +35,11 @@ function ModelList({
                 : "bg-white border-zinc-200"
               }`}
           >
-            {/* col 1: model id */}
+
             <div className="flex-[2] min-w-0 text-[13px] font-medium text-zinc-800 leading-snug truncate">
               {r.id}
             </div>
 
-            {/* col 2: alias input */}
             <input
               value={r.alias}
               onChange={(e) => onAliasChange(r.id, e.target.value)}

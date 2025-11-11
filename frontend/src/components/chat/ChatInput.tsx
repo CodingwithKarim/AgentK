@@ -30,7 +30,6 @@ export default function ChatInput() {
     }
   };
 
-  // Auto-grow textarea like ChatGPT
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;

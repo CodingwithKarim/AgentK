@@ -1,8 +1,7 @@
 package config
 
 import (
-	"encoding/json"
-	"fmt"
+	"log"
 	"strings"
 
 	"github.com/CodingWithKarim/AgentK/internal/utils"
@@ -10,25 +9,30 @@ import (
 )
 
 func loadStaticModels() []*types.Model {
-	var loaded []*types.Model
+	models := []*types.Model{}
 
-	for _, id := range utils.PerplexityModels {
-		m := &types.Model{
-			ID:      id,
-			Name:    strings.ReplaceAll(id, "-", " "),
+	for _, modelID := range utils.PerplexityModels {
+		model := &types.Model{
+			ID:      modelID,
+			Name:    strings.ReplaceAll(modelID, "-", " "),
 			Enabled: true,
 		}
-		loaded = append(loaded, m)
+		models = append(models, model)
 	}
 
-	return loaded
+	return models
 }
 
-func parseConfig(data []byte) (*types.JsonLayout, error) {
-	var config types.JsonLayout
+func debugCount() {
+	count := 0
 
-	if err := json.Unmarshal(data, &config); err != nil {
-		return nil, fmt.Errorf("failed to parse config JSON: %w", err)
+	ProviderConfigsMu.RLock()
+
+	for _, providerConfig := range ProviderConfigs {
+		count += len(providerConfig.Models)
 	}
-	return &config, nil
+
+	ProviderConfigsMu.RUnlock()
+
+	log.Printf("Total model count is %d models", count)
 }

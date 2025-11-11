@@ -2,18 +2,6 @@ package types
 
 import "encoding/json"
 
-type Model struct {
-	ID       string   `json:"id"`
-	Name     string   `json:"name"`
-	Provider Provider `json:"provider,omitempty"`
-	Enabled  bool     `json:"enabled"`
-}
-
-type Session struct {
-	SessionID string `json:"id"`
-	Name      string `json:"name"`
-}
-
 type ChatRequest struct {
 	ModelID  string          `json:"modelID"`
 	Message  string          `json:"message"`
@@ -22,9 +10,15 @@ type ChatRequest struct {
 	Tokens   int64           `json:"tokens"`
 }
 
-type APIMessage struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
+type Model struct {
+	ID       string   `json:"id"`
+	Name     string   `json:"name"`
+	Provider Provider `json:"provider,omitempty"`
+	Enabled  bool     `json:"enabled"`
+}
+
+type GetModelsResponse struct {
+	Models []*Model `json:"models"`
 }
 
 type Provider string
@@ -39,10 +33,15 @@ type ProviderEndpoints struct {
 	ModelEndpoint string
 }
 
-type GetModelsResponse struct {
-	Models []*Model `json:"models"`
+type CohereModelResponse struct {
+	Models []CohereModel `json:"models"`
 }
 
-type JsonLayout struct {
-	Providers map[Provider]*ProviderConfig `json:"Providers"`
+type CohereModel struct {
+	Name          string   `json:"name"`
+	Endpoints     []string `json:"endpoints"`
+	Finetuned     bool     `json:"finetuned"`
+	ContextLength int      `json:"context_length"`
+	TokenizerURL  string   `json:"tokenizer_url"`
+	Features      any      `json:"features"`
 }

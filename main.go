@@ -31,13 +31,13 @@ func main() {
 		_, _ = w.Write([]byte("ok"))
 	})
 
-	fsys, err := fs.Sub(embeddedFiles, "frontend/dist")
+	fileSystem, err := fs.Sub(embeddedFiles, "frontend/dist")
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	http.Handle("/", http.FileServer(http.FS(fsys)))
+	http.Handle("/", http.FileServer(http.FS(fileSystem)))
 
 	port := os.Getenv("PORT")
 

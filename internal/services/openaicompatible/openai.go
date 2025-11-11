@@ -22,17 +22,17 @@ func GenerateChatCompletion(
 		option.WithBaseURL(endpoint),
 	)
 
-	resp, err := client.Chat.Completions.New(context.Background(), buildChatCompletionParams(modelID, tokens, messages))
+	response, err := client.Chat.Completions.New(context.Background(), buildChatCompletionParams(modelID, tokens, messages))
 
 	if err != nil {
 		return "", err
 	}
 
-	if len(resp.Choices) == 0 {
+	if len(response.Choices) == 0 {
 		return "", nil
 	}
 
-	return resp.Choices[0].Message.Content, nil
+	return response.Choices[0].Message.Content, nil
 }
 
 func LoadModels(key, baseURL string, providerName types.Provider) ([]*types.Model, error) {
@@ -45,26 +45,25 @@ func LoadModels(key, baseURL string, providerName types.Provider) ([]*types.Mode
 		option.WithBaseURL(baseURL),
 	)
 
-	resp, err := client.Models.List(context.TODO())
+	response, err := client.Models.List(context.Background())
+
 	if err != nil {
 		return nil, fmt.Errorf("%s model list failed: %w", providerName, err)
 	}
 
 	if providerName == utils.COHERE {
-		return parseCohereModels([]byte(resp.RawJSON()), providerName)
+		return parseCohereModels([]byte(response.RawJSON()), providerName)
 	}
 
-	out := make([]*types.Model, 0, len(resp.Data))
+	models := make([]*types.Model, 0, len(response.Data))
 
-	for _, model := range resp.Data {
-		id := model.ID
-
-		out = append(out, &types.Model{
-			ID:      id,
-			Name:    id,
-			Enabled: allowOpenAIModel(id),
+	for _, model := range response.Data {
+		models = append(models, &types.Model{
+			ID:      model.ID,
+			Name:    model.ID,
+			Enabled: allowOpenAIModel(model.ID),
 		})
 	}
 
-	return out, nil
+	return models, nil
 }

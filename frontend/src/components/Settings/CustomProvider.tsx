@@ -84,7 +84,7 @@ export default function CustomModelsConfig({
     setTimeout(() => setJustSaved(false), 1000);
   }, [draftRows, models, provider, setModels]);
 
- const anyEnabled = draftRows.some((r) => r.enabled);
+  const anyEnabled = draftRows.some((r) => r.enabled);
   const handleToggleAll = useCallback(() => {
     setDraftRows((prev) => prev.map((r) => ({ ...r, enabled: !anyEnabled })));
   }, [anyEnabled]);
@@ -104,18 +104,16 @@ export default function CustomModelsConfig({
           placeholder="Alias (optional)"
           className="w-full sm:w-auto flex-1 px-2.5 py-1.5 text-xs rounded-md border border-zinc-300 focus:ring-2 focus:ring-blue-500 outline-none"
         />
- <button
-  type="button"
-  onClick={handleAdd}
-  className="self-center sm:self-auto mx-auto flex items-center justify-center gap-1 py-1 px-3 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md border hover:border-blue-200 transition-all duration-200"
->
-  <Plus className="w-4 h-4" /> Add Model
-</button>
+        <button
+          type="button"
+          onClick={handleAdd}
+          className="self-center sm:self-auto mx-auto flex items-center justify-center gap-1 py-1 px-3 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md border hover:border-blue-200 transition-all duration-200"
+        >
+          <Plus className="w-4 h-4" /> Add Model
+        </button>
       </div>
-
-      {/* ✅ Enable/Disable All toggle bar */}
       <div className="flex items-center justify-between mb-1">
-       
+
         <button
           onClick={handleToggleAll}
           className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 transition"
@@ -149,11 +147,10 @@ export default function CustomModelsConfig({
         <button
           type="button"
           onClick={handleSaveAll}
-          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-            justSaved
+          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${justSaved
               ? "bg-zinc-300 text-zinc-600 cursor-not-allowed"
               : "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg"
-          }`}
+            }`}
         >
           <Save className="w-4 h-4" />
           Save

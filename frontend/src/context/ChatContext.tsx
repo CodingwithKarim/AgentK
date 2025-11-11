@@ -326,12 +326,7 @@ useEffect(() => { maxTokensRef.current = maxTokens; }, [maxTokens]);
       { id: tempId, role: "assistant", text: "", model_name: modelName || selectedModel, ts: placeholderTs, pending: true }
     ]);
 
-    console.log("Max Tokens: ", maxTokens)
-    console.log("Mode: ", mode);
-
     const tokens = modeRef.current === "custom" ? maxTokensRef.current : 0;
-
-    console.log("FInal tokens: ", tokens)
 
     try {
       const resp = await sendChatMessage(

@@ -12,10 +12,10 @@ import (
 )
 
 func allowOpenAIModel(id string) bool {
-	l := strings.ToLower(id)
+	modelID := strings.ToLower(id)
 
-	for _, bad := range utils.DisallowedModels {
-		if strings.Contains(l, bad) {
+	for _, badWord := range utils.DisallowedModels {
+		if strings.Contains(modelID, badWord) {
 			return false
 		}
 	}
@@ -28,45 +28,33 @@ func buildChatCompletionParams(modelID string, tokens int64, messages []openai.C
 		Model:    modelID,
 		Messages: messages,
 	}
+
 	if tokens > 0 {
 		params.MaxCompletionTokens = param.Opt[int64]{Value: tokens}
 	}
 	return params
 }
 
-func parseCohereModels(raw []byte, providerName types.Provider) ([]*types.Model, error) {
-	var decoded struct {
-		Models []struct {
-			Name          string   `json:"name"`
-			Endpoints     []string `json:"endpoints"`
-			Finetuned     bool     `json:"finetuned"`
-			ContextLength int      `json:"context_length"`
-			TokenizerURL  string   `json:"tokenizer_url"`
-			Features      any      `json:"features"`
-		} `json:"models"`
+func parseCohereModels(rawJSON []byte, providerName types.Provider) ([]*types.Model, error) {
+	response := &types.CohereModelResponse{}
 
-		NextPageToken string `json:"next_page_token"`
-	}
-
-	if err := json.Unmarshal(raw, &decoded); err != nil {
+	if err := json.Unmarshal(rawJSON, &response); err != nil {
 		return nil, fmt.Errorf("%s parse failed: %w", providerName, err)
 	}
 
-	out := make([]*types.Model, 0, len(decoded.Models))
+	models := make([]*types.Model, 0, len(response.Models))
 
-	for _, m := range decoded.Models {
-		if m.Name == "" {
+	for _, model := range response.Models {
+		if model.Name == "" {
 			continue
 		}
 
-		modelID := m.Name
-
-		out = append(out, &types.Model{
-			ID:      modelID,
-			Name:    modelID,
-			Enabled: allowOpenAIModel(modelID),
+		models = append(models, &types.Model{
+			ID:      model.Name,
+			Name:    model.Name,
+			Enabled: allowOpenAIModel(model.Name),
 		})
 	}
 
-	return out, nil
+	return models, nil
 }
