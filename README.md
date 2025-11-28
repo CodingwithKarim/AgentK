@@ -17,6 +17,28 @@ All you need is an API key for the providers you want to use and you're ready to
 
 ---
 
+## Quick Start
+
+```bash
+git clone https://github.com/CodingwithKarim/AgentK.git
+cd AgentK
+
+# Generate your .env file and add API keys
+cp .env.example .env            # macOS & Linux
+Copy-Item .env.example .env     # Windows PowerShell
+
+# Launch AgentK
+docker compose up
+```
+
+Then open in your browser:
+
+```
+http://localhost:8080
+```
+
+---
+
 ## Table of Contents
 - [Features](#features)
 - [Prerequisites](#prerequisites)
@@ -25,7 +47,7 @@ All you need is an API key for the providers you want to use and you're ready to
 - [Technical Overview](#technical-overview)
 - [Philosophy](#philosophy)
 - [Limitations](#limitations)
-- [Provider Documentation](#provider-documentation)
+- [Find Model IDs](#find-model-ids)
 - [License](#license)
 
 ---
@@ -135,7 +157,7 @@ Make sure **the Docker service is running** before executing the commands below.
 #### 1️⃣ Clone the repository
 
 ```bash
-git clone https://github.com/your-username/AgentK.git
+git clone https://github.com/CodingwithKarim/AgentK.git
 cd AgentK
 ```
 
@@ -169,7 +191,7 @@ docker compose up --build
 #### 1️⃣ Clone the repository
 
 ```bash
-git clone https://github.com/your-username/AgentK.git
+git clone https://github.com/CodingwithKarim/AgentK.git
 cd AgentK
 ```
 
@@ -365,7 +387,7 @@ AgentK gives control back to the user. It turns provider APIs into a practical w
 
 ---
 
-## Provider Documentation
+## Find Model IDs
 Pull model IDs from any of these sources:
 - 🔹 [OpenAI Models](https://platform.openai.com/docs/models)  
 - 🔹 [Anthropic Models](https://docs.anthropic.com/en/docs/about-claude/models/all-models)

@@ -25,7 +25,6 @@ func InitializeClients(openAIClient *openaiSDK.Client, anthropicClient *anthropi
 		}
 	}
 
-	// Initialize OpenAI-compatible clients using the shared OpenAI client + distinct keys
 	for _, provider := range utils.OpenAICompatibleProviders {
 		if key := utils.GetKey(provider); key != "" {
 			Clients[provider] = &openaicompatible.OpenAIClient{

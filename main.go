@@ -57,17 +57,18 @@ func main() {
 		}
 	}()
 
-	log.Println("Server started on port 8080")
+	log.Println("AgentK Server started on port 8080")
 
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
-	<-signalChan
+	shutdownChannel := make(chan os.Signal, 1)
+	signal.Notify(shutdownChannel, syscall.SIGINT, syscall.SIGTERM)
 
-	context, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	<-shutdownChannel
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := server.Shutdown(context); err != nil {
-		log.Fatalf("server shutdown failed: %v", err)
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatalf("Server shutdown failed: %v", err)
 	}
 
 	log.Println("Server shutdown complete.")
