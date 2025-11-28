@@ -1,12 +1,22 @@
-# AgentK
-> Your multi-model AI control center
+<div align="center">
+  
+# AgentK  
+> Your multi-model AI control center  
 
-![image](https://github.com/user-attachments/assets/8e4a23ae-e07e-46f7-bd49-bf7448123738)
+</div>
 
-AgentK is an AI control center that unifies access to 7 major AI providers under one sleek, minimalistic interface. With AgentK, you can swap between models during chat sessions, manage multiple conversations at the same time, and interact with different AI providers individually or simultaneously — all without ever leaving the app.
+<img width=100% height=50% alt="image" src="https://github.com/user-attachments/assets/eb50ddde-bb35-4e0e-8759-a5e78dc2cedc" />
 
-Thanks to direct integration with provider APIs, you have the flexibility to use **hundreds of available models** across OpenAI, Anthropic, Groq, Gemini, Perplexity, Cohere, and Hugging Face. Whether you're prototyping ideas, performing research, or just exploring the capabilities of modern AI, AgentK makes it simple to experiment with the latest cutting edge AI models without spending money every month on expensive AI subscriptions. 
 
+
+
+AgentK is a lightweight AI control center that lets you interact with multiple AI providers and all of their available models inside a clean and minimalistic interface.
+
+You can swap between models in real time, compare responses, delete or resubmit messages to refine context, customize token usage, and shape conversations exactly how you want, all without leaving the app.
+
+AgentK communicates directly with AI provider APIs and instantly loads every available model. This gives you unified access to models from OpenAI, Anthropic, Groq, Gemini, Perplexity, Cohere, Hugging Face and cloud-based providers such as DeepInfra, xAI and OpenRouter, all in one place.
+
+AgentK runs entirely on your device using local storage, giving you full control over your data. All you need is an API key from the provider you choose. Once the key is added, AgentK automatically retrieves all available models and is ready to use. It offers simultaneous access to multiple providers while helping you avoid costly and separate AI subscriptions.
 
 ---
 
@@ -14,204 +24,237 @@ Thanks to direct integration with provider APIs, you have the flexibility to use
 - [Features](#features)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
-- [Configuration](#configuration)
 - [API Keys](#api-keys)
 - [Usage](#usage)
-- [Advanced Features](#advanced-features)
 - [Provider Documentation](#provider-documentation)
 - [License](#license)
 
 ---
 
 ## Features
- 🔹 **Multi-AI-Provider Support**  
-  - OpenAI  
-  - Anthropic (Claude)  
-  - Groq  
-  - Perplexity  
-  - Cohere  
-  - Google Gemini  
-  - Hugging Face
-  - Hugging Face Inference Providers (gives access to 10+ more AI providers & hundreds of models)
 
- 🔹 **Multi-Model Conversations**  
-  Talk to multiple models simultaneously or one at a time. Compare responses across different models for the same prompt.
+### Supported providers
+- OpenAI  
+- Anthropic
+- Google Gemini
+- xAI (Grok)
+- Groq  
+- Perplexity  
+- Cohere  
+- DeepInfra (cloud provider)  
+- OpenRouter (cloud provider)  
+- Hugging Face (cloud + custom inference providers)  
 
- 🔹 **Dynamic Context Sharing**  
-  Toggle shared context on/off between models. Let models see each other's responses or keep conversations isolated.
+---
 
- 🔹 **Dynamic Model Pulling**  
-  Edit the `agentk_config.json` file to pull any model offered by your providers & enter API keys.
+### Model Management
+- Fetch models directly through provider APIs  
+- Reload provider model lists at any time  
+- Enable or disable models for visibility control 
+- Assign custom aliases to any model
+- Manually add missing or custom models
+- Adjust token limits and generation settings per model
 
- 🔹 **Secure API Key Management**  
-  Store your keys locally; AgentK never commits secrets as it runs locally.
+---
 
- 🔹 **Session Control**  
-  Create, switch, and delete named chat sessions.
+### Real Time Model Switching
+- Use different providers and models inside the same interface
+- Swap models instantly without leaving the conversation
+- Test prompts across multiple models in a single workflow
 
- 🔹 **Resource Optimization**  
-  Control token usage and response length through model configurations.
+---
+
+### Conversation Tools
+- Start, switch, rename and delete chat sessions  
+- Compare responses from different models  
+- Delete or resubmit messages to edit conversation context  
+- Customize max completion tokens per request
+
+---
+
+### Smart Context Control
+- Choose whether models share the same conversation or stay fully separate
+- Shared mode lets models reference earlier messages and compare responses
+- Isolated mode keeps each model in its own independent conversation
 
 ---
 
 ## Prerequisites
-- [Go 1.20+](https://golang.org/doc/install) (for the backend)  
-- [Node.js 16+](https://nodejs.org/) & [npm](https://www.npmjs.com/) (for the frontend)
 
+You can run AgentK using Docker (recommended) or manually.
+
+#### Option A — Docker (Preferred)
+Make sure you have:
+- Docker installed
+
+#### Option B — Manual Setup
+If not using Docker, you'll need:
+- Go
+- Node.js and npm
+
+### Environment Variables
+
+AgentK requires a `.env` file in the root directory.
+
+A `.env.example` file is already included in the repository.  
+
+You can either:
+
+1. **Create your own `.env` file** and use `.env.example` as a reference  
+2. **Or rename `.env.example` to `.env`** and fill in your API keys directly
+
+Add API keys for providers you plan to use:
+
+```env
+OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
+GEMINI_API_KEY=
+GROQ_API_KEY=
+XAI_API_KEY=
+PERPLEXITY_API_KEY=
+COHERE_API_KEY=
+DEEPINFRA_API_KEY=
+OPENROUTER_API_KEY=
+```
 ---
 
 ## Installation
-1. **Clone this repo**  
-   ```bash
-   git clone https://github.com/your-username/AgentK.git
-   cd AgentK
-   ```
-2. **Backend**  
-   ```bash
-   cd backend
-   go mod tidy (optional)
-   go run main.go
-   ```
-3. **Frontend**  
-   ```bash
-   cd ../frontend
-   npm install
-   npm run dev
-   ```
 
-4. Open your browser to `http://localhost:5173` and enjoy.
-   
+### Option A — Run with Docker (Recommended)
+
+```bash
+git clone https://github.com/your-username/AgentK.git
+cd AgentK
+
+docker compose up
+```
+
+Then open your browser at:
+
+```
+http://localhost:8080
+```
+
+---
+
+### Option B — Manual Setup (Development Mode)
+
+#### 1. Clone the repository
+
+```bash
+git clone https://github.com/your-username/AgentK.git
+cd AgentK
+```
+
+#### 2. Start the backend
+
+```bash
+go mod tidy
+go run main.go
+```
+
+#### 3. Start the frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Then open your browser at:
+
+```
+http://localhost:5173
+```
+
+---
+
+### 🔑 API Keys Reminder
+
+Make sure your `.env` file is set up before running the app (see **Environment Variables** section above).
+
 ---
 
 ## API Keys
-**IMPORTANT**: You must sign up for API keys from each provider you wish to use: You won't be able to run inference otherwise since the request payload for all provider endpoints require it. Once you've grabbed your API keys, make sure to drop them into the AgentK_config.json file. You can skip this step for any providers you dont intend to use.
 
-- [OpenAI API Keys](https://platform.openai.com/api-keys)
-- [Anthropic API Keys](https://console.anthropic.com/settings/keys)
-- [Groq API Keys](https://console.groq.com/keys)
-- [Perplexity API Keys](https://www.perplexity.ai/settings/api)
-- [Cohere API Keys](https://dashboard.cohere.com/api-keys)
-- [Google AI API Keys](https://aistudio.google.com/app/apikey)
-- [Hugging Face API Keys](https://huggingface.co/settings/tokens)
+AgentK requires API keys to communicate with AI providers.  
 
-OpenAI and Claude allow you to create an API key for free; however, you cannot run inference on their models without purchasing API credits. Both platforms require a minimum payment of $5 to enable access. Perplexity also requires an upfront payment of at least $3 for API usage (in my opinion their Sonar models are underwhelming). 
+Once you have your keys, place them in your `.env` file  
+(see the **Environment Variables** section).
 
-The rest of the AI providers offer both free and paid tiers, allowing you to start interacting with models at no cost. Groq and Hugging Face stand out for their generous free-tier access and offer some of the most cost-effective API credits available.
-
-Hugging Face is particularly powerful, giving you access to hundreds of models, along with integrations from over 10 dedicated inference providers, all through a single API key. You can also visit any provider's website and try out their flagship models — just make sure to use the correct Hugging Face API URL and model name from their documentation. This unlocks a wide range of models hosted by various companies, greatly expanding your available options.
-
-Google Gemini also provides an excellent free tier, offering access to their powerful Gemini models. In my experience, Gemini models deliver incredible response times and support very large context sizes, making them an outstanding option for demanding applications.
+You only need keys for providers you actually plan to use.
 
 ---
 
-## Configuration
-1. Open `agentk_config.json` located at the project root folder.
-2. Under the `"Providers"` section, enter your API keys for providers you would like access to:
-   ```jsonc
-   {
-     "Providers": {
-       "OpenAI":    { "apiKey": "YOUR_API_KEY" },
-       "Anthropic": { "apiKey": "YOUR_API_KEY" },
-       "Groq":      { "apiKey": "YOUR_API_KEY" },
-       "Perplexity":{ "apiKey": "YOUR_API_KEY" },
-       "Cohere":    { "apiKey": "YOUR_API_KEY" },
-       "Google":    { "apiKey": "YOUR_API_KEY" },
-       "HuggingFace": {"apiKey": "YOUR_API_KEY" }
-     },
-     "Models": {
-       // Add model info here after consulting provider docs for proper configuration
-       // Default models will be provided for you to use and follow as an example but you are expected to config your own models using the agentk_config.json file + appropriate API keys for access
-       // If you don't have API keys set up for certain providers, do not include their modles in the config file as they will be unaccessible. 
-       // Model info can be found under provider docs  (see below)
-     }
-   }
-   ```
-3. Under `"Models"`, list any model IDs you wish to use. Example:
-   ```jsonc
-   "Models": {
-     "gpt-4o-2024-08-06": {
-       "id": "gpt-4o-2024-08-06", // the ID property needs to match the key, see default models for example
-       "name": "GPT-4o", // model name you would like to use, can be custom
-       "provider": "OpenAI", // AI provider, see options above
-       "endpoint": "https://api.openai.com/v1/chat/completions", // API endpoint, see provider docs for URL endpoints (see curl example)
-       "contextSize": 128000, // Total available context (prompt + history) for the model per request. Affects API costs. Adjustable. See provider documentation.
-       "maxCompletionTokens": 16384 // Maximum size of the model's response. Also impacts API costs. Adjustable. See provider documentation.
-     },
-     // ...more models
-   }
-   ```
+### 🔑 Where to Get API Keys
+
+| Provider        | Get API Key |
+|-----------------|-------------|
+| OpenAI          | https://platform.openai.com/api-keys        |
+| Anthropic       | https://console.anthropic.com/settings/keys |
+| xAI             | https://console.x.ai/                       |
+| Groq            | https://console.groq.com/keys               |
+| Perplexity      | https://www.perplexity.ai/settings/api      |
+| Cohere          | https://dashboard.cohere.com/api-keys       |
+| Google Gemini   | https://aistudio.google.com/app/apikey      |
+| OpenRouter      | https://openrouter.ai/settings/keys         |
+| DeepInfra       | https://deepinfra.com/dash/api_keys         |
+| Hugging Face    | https://huggingface.co/settings/tokens      |
+
+---
+
+### ⭐ Recommended Providers to Start With
+- **Groq** → generous free tier and fast inference
+- **Hugging Face** → one API key unlocks hundreds of models and access to multiple hosted providers
+- **OpenRouter / DeepInfra** → cloud providers with unified access to many hosted models across providers
+- **OpenAI / Anthropic / Gemini** → mainstream premium providers
 
 ---
 
 ## Usage
-1. **Start the backend**  
-   ```bash
-   cd backend
-   go mod tidy (optional)
-   go run main.go
-   ```
-2. **Start the frontend**  
-   ```bash
-   cd ../frontend
-   npm run dev
-   ```
-3. Open your browser to `http://localhost:5173` and enjoy.
 
-### Using Multi-Model Chat
-1. Create a new session by clicking the "+" button
-2. Toggle "Shared Context" on to allow models to see each other's responses
-3. Select multiple models from the dropdown menu
-4. Type your prompt and see how different models respond
-5. Toggle models on/off during the conversation to control which ones respond
+### Start a Chat
+1. Click **+ New Session**
+2. Select a provider and model
+3. Type a prompt and start chatting
 
 ---
 
-## Advanced Features
+### Share or Isolate Context
+You can choose how models interact with the conversation:
+- **Shared Context** → models can reference all previous messages in the session  
+- **Isolated Context** → each model responds independently with its own context
 
-### Multi-Model Conversations
+---
 
-AgentK allows you to:
+### Click a Message To:
+- Delete it from context  
+- Resubmit it using a different model  
+- Compare responses across multiple models  
 
-1. **Compare Responses**: Ask the same question to multiple models simultaneously
-2. **Chain Conversations**: Let one model build on another's response
-3. **Isolate Conversations**: Toggle shared context off to keep model conversations separate
+---
 
-### Context Size Management
-
-AgentK allows you to control how much of the conversation history is sent to the model. By default Context Size and Max Completion Tokens are set to highest value possible according to provider docs. Feel free to play around with these values but make sure to monitor.
-
-1. **Context Size**: The `contextSize` parameter in your model configuration controls the maximum number of tokens used for the conversation history. This helps manage resource usage and API costs.
-
-2. **Max Completion Tokens**: The `maxCompletionTokens` parameter limits how many tokens the model can generate in response. If not specified, AgentK uses a reasonable default based on the model's capabilities.
-
-### Resource Optimization
-
-Create different variants of models with adjusted context sizes and response limits:
-
-```jsonc
-"llama-3.3-70b-economy": {
-  "id": "llama-3.3-70b-economy",
-  "name": "LLaMA 3.3 (Economy)",
-  "provider": "Groq",
-  "endpoint": "https://api.groq.com/openai/v1/chat/completions",
-  "contextSize": 32000,        // Reduced from 128000
-  "maxCompletionTokens": 8192  // Reduced from 32768
-}
-```
-
-This allows users to choose the resource profile that best fits their needs, balancing performance with efficiency.
+### Settings
+- Refresh provider models to pull the latest available list  
+- Enable or disable models to control which ones appear in the UI  
+- Manually add models that were not returned by the API  
+- Assign custom aliases to both new and existing models for easier readability 
+- Customize max completion tokens to control response length and cost
 
 ---
 
 ## Provider Documentation
 Pull model IDs from any of these sources:
 - 🔹 [OpenAI Models](https://platform.openai.com/docs/models)  
-- 🔹 [Anthropic Claude Models](https://docs.anthropic.com/en/docs/about-claude/models/all-models)  
+- 🔹 [Anthropic Models](https://docs.anthropic.com/en/docs/about-claude/models/all-models)
+- 🔹 [Google Gemini Models](https://ai.google.dev/gemini-api/docs/models)    
+- 🔹 [xAI Models](https://docs.x.ai/docs/models)
 - 🔹 [Groq Models](https://console.groq.com/docs/models)  
 - 🔹 [Perplexity Models](https://docs.perplexity.ai/models/model-cards)  
 - 🔹 [Cohere Models](https://docs.cohere.com/v1/docs/models)  
-- 🔹 [Google Gemini API Models](https://ai.google.dev/gemini-api/docs/models)  
-- 🔹 [Hugging Face Chat-Completion](https://huggingface.co/docs/inference-providers/tasks/chat-completion)
+- 🔹 [OpenRouter Models](https://openrouter.ai/models)  
+- 🔹 [DeepInfra Models](https://deepinfra.com/models)  
+- 🔹 [Hugging Face Models](https://huggingface.co/models?inference_provider=all)
 - 🔹 [Hugging Face Inference Providers](https://huggingface.co/docs/inference-providers/index)  
 
 ---
