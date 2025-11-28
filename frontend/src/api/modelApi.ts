@@ -5,40 +5,61 @@ import { preferredOrder } from "../utils/constants";
 export async function fetchModels(): Promise<Model[]> {
   const cached = await db.models.toArray();
   if (cached.length > 0) return sortModels(cached);
-  return await refreshModels();
+  return refreshModels();
 }
 
-export async function refreshModels(): Promise<Model[]> {
-  try {
-    const r = await fetch("/api/models");
-    if (!r.ok) throw new Error(String(r.status));
-    const payload = await r.json();
+export const refreshModels = () =>
+  refreshModelsBase("/api/models");
 
-    const raw: unknown = Array.isArray(payload)
-      ? payload
-      : Array.isArray((payload as any)?.models)
-      ? (payload as any).models
-      : [];
+export const refreshModelsForProvider = (provider: string) =>
+  refreshModelsBase(
+    `/api/models?provider=${encodeURIComponent(provider)}`,
+    provider
+  );
+
+async function refreshModelsBase(
+  url: string,
+  deleteProvider?: string
+): Promise<Model[]> {
+  try {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(String(r.status));
+
+    const payload = await r.json();
+    const raw = extractRawModels(payload);
 
     const byKey = new Map<string, Model>();
-    for (const x of raw as any[]) {
+    for (const x of raw) {
       const m = normalizeModel(x);
       if (!m) continue;
-      const k = `${m.provider}:${m.id}`;
-      if (!byKey.has(k)) byKey.set(k, m);
+      byKey.set(`${m.provider}:${m.id}`, m);
     }
 
-    const sorted = sortModels(Array.from(byKey.values()));
+    const sorted = sortModels([...byKey.values()]);
 
     await db.transaction("rw", db.models, async () => {
-      await db.models.clear();
+      if (deleteProvider) {
+        const keys = await db.models
+          .where("provider")
+          .equals(deleteProvider)
+          .primaryKeys();
+
+        await db.models.bulkDelete(keys);
+      }
       await db.models.bulkPut(sorted);
     });
 
     return sorted;
-  } catch {
+  } catch (e) {
+    console.warn("Model refresh failed:", e);
     return [];
   }
+}
+
+function extractRawModels(payload: any): any[] {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.models)) return payload.models;
+  return [];
 }
 
 function normalizeModel(x: any): Model | null {
@@ -62,16 +83,6 @@ function sortModels(models: Model[]): Model[] {
     }
     return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
   };
-
-   const counts: Record<string, number> = {};
-  for (const m of models) {
-    counts[m.provider] = (counts[m.provider] || 0) + 1;
-  }
-
-  // Optional: print results to console
-  for (const [provider, count] of Object.entries(counts)) {
-    console.log(`📦 ${provider}: ${count} models`);
-  }
 
   return typeof (models as any).toSorted === "function"
     ? (models as any).toSorted(sorter)

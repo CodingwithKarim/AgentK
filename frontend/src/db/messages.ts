@@ -8,6 +8,21 @@ export async function getMessageById(id: string | number): Promise<MessageRow | 
   return db.messages.get(pk);
 }
 
+export async function updateMessageModel(
+  messageId: string | number,
+  modelId: string,
+  modelName?: string
+) {
+  const pk = typeof messageId === "number" ? messageId : Number(messageId);
+  if (!Number.isFinite(pk)) return;
+
+  await db.messages.update(pk, {
+    modelId,
+    modelName: modelName ?? modelId,
+  });
+}
+
+
 export async function getContextUpToMessage(params: {
   sessionId: string;
   clickedId: string | number;

@@ -1,6 +1,8 @@
 package types
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 type ChatRequest struct {
 	ModelID  string          `json:"modelID"`
@@ -17,31 +19,9 @@ type Model struct {
 	Enabled  bool     `json:"enabled"`
 }
 
-type GetModelsResponse struct {
-	Models []*Model `json:"models"`
-}
-
 type Provider string
-
-type ProviderConfig struct {
-	Endpoints ProviderEndpoints
-	Models    map[string]*Model `json:"models"`
-}
 
 type ProviderEndpoints struct {
 	BaseURL       string
 	ModelEndpoint string
-}
-
-type CohereModelResponse struct {
-	Models []CohereModel `json:"models"`
-}
-
-type CohereModel struct {
-	Name          string   `json:"name"`
-	Endpoints     []string `json:"endpoints"`
-	Finetuned     bool     `json:"finetuned"`
-	ContextLength int      `json:"context_length"`
-	TokenizerURL  string   `json:"tokenizer_url"`
-	Features      any      `json:"features"`
 }

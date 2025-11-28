@@ -270,6 +270,7 @@ export default memo(MessageBubble, (prev, next) => {
   const b = next.chatMessage;
   return (
     prev.isPending === next.isPending &&
+    prev.resubmitMessage === next.resubmitMessage &&
     a.id === b.id &&
     a.text === b.text &&
     a.model_name === b.model_name &&

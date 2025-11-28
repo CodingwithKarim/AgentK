@@ -1,35 +1,42 @@
 package main
 
 import (
+	"context"
 	"embed"
 	"io/fs"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/CodingWithKarim/AgentK/internal/api"
-	"github.com/CodingWithKarim/AgentK/internal/config"
+	"github.com/CodingWithKarim/AgentK/internal/llms"
+	"github.com/anthropics/anthropic-sdk-go"
 	"github.com/joho/godotenv"
+	"github.com/openai/openai-go"
 )
 
-//go:embed all:frontend/dist
+//go:embed frontend/dist/*
 var embeddedFiles embed.FS
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found (using system environment)")
-	}
+	_ = godotenv.Load()
 
-	if err := config.LoadConfig(); err != nil {
-		log.Fatal("❌ Failed to load config:", err)
-	}
+	openAIClient := openai.NewClient()
+	anthropicClient := anthropic.NewClient(anthropic.DefaultClientOptions()...)
 
-	http.HandleFunc("/api/models", api.ModelsHandler)
-	http.HandleFunc("/api/chat", api.ChatHandler)
-	http.HandleFunc("/api/healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("ok"))
-	})
+	llms.InitializeClients(
+		&openAIClient, // OpenAI client supports all providers except Anthropic
+		&anthropicClient,
+	)
+
+	router := http.NewServeMux()
+
+	router.HandleFunc("/api/chat", api.ChatHandler)
+	router.HandleFunc("/api/models", api.GetModelsHandler)
+	router.HandleFunc("/api/health", api.GetHealthStatus)
 
 	fileSystem, err := fs.Sub(embeddedFiles, "frontend/dist")
 
@@ -37,15 +44,31 @@ func main() {
 		log.Fatal(err)
 	}
 
-	http.Handle("/", http.FileServer(http.FS(fileSystem)))
+	router.Handle("/", http.FileServer(http.FS(fileSystem))) // Serve frontend at root
 
-	port := os.Getenv("PORT")
-
-	if port == "" {
-		port = "8080"
+	server := &http.Server{
+		Addr:    "0.0.0.0:8080",
+		Handler: router,
 	}
 
-	if err := http.ListenAndServe("0.0.0.0:"+port, nil); err != nil {
-		log.Fatal(err)
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen error: %v", err)
+		}
+	}()
+
+	log.Println("Server started on port 8080")
+
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+	<-signalChan
+
+	context, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(context); err != nil {
+		log.Fatalf("server shutdown failed: %v", err)
 	}
+
+	log.Println("Server shutdown complete.")
 }

@@ -8,16 +8,16 @@ import (
 
 	"github.com/CodingWithKarim/AgentK/internal/utils"
 	"github.com/CodingWithKarim/AgentK/internal/utils/types"
-	"github.com/anthropics/anthropic-sdk-go"
+	anthropicSdk "github.com/anthropics/anthropic-sdk-go"
 	"github.com/openai/openai-go"
 )
 
-func parseContext(provider types.Provider, raw json.RawMessage) (any, error) {
+func getFormattedContext(provider types.Provider, rawContext json.RawMessage) (any, error) {
 	switch provider {
 	case utils.ANTHROPIC:
-		var messages []anthropic.MessageParam
+		var messages []anthropicSdk.MessageParam
 
-		if err := json.Unmarshal(raw, &messages); err != nil {
+		if err := json.Unmarshal(rawContext, &messages); err != nil {
 			return nil, fmt.Errorf("invalid Anthropic context: %w", err)
 		}
 
@@ -26,7 +26,7 @@ func parseContext(provider types.Provider, raw json.RawMessage) (any, error) {
 	default:
 		var messages []openai.ChatCompletionMessageParamUnion
 
-		if err := json.Unmarshal(raw, &messages); err != nil {
+		if err := json.Unmarshal(rawContext, &messages); err != nil {
 			return nil, fmt.Errorf("invalid OpenAI-compatible context: %w", err)
 		}
 
@@ -35,8 +35,8 @@ func parseContext(provider types.Provider, raw json.RawMessage) (any, error) {
 }
 
 func validateChatRequest(request *types.ChatRequest) error {
-	if request.ModelID == "" || request.Message == "" {
-		log.Println("❌ Missing request fields")
+	if request.ModelID == "" || request.Message == "" || request.Provider == "" || request.Context == nil {
+		log.Println("Missing request fields")
 		return errors.New("sessionID, modelID, and message are required")
 	}
 	return nil

@@ -4,7 +4,7 @@ import { useChat } from "../../context/ChatContext";
 
 export default function SettingsPage({ onClose }: { onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
-  const { models, setModels } = useChat();
+  const { models, setModels, handleRefreshProviderModels } = useChat();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -41,7 +41,7 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
       </a>
 
       <div className="relative w-full h-full bg-white">
-        <ProviderConfigPanel models={models} setModels={setModels} />
+        <ProviderConfigPanel models={models} setModels={setModels} handleRefreshProviderModels={handleRefreshProviderModels} />
         <button
           onClick={onClose}
           className="absolute top-3 left-3 px-3 py-1.5 rounded-lg bg-white border border-zinc-200 shadow-sm hover:bg-zinc-50"

@@ -1,6 +1,12 @@
 package utils
 
-import "github.com/CodingWithKarim/AgentK/internal/utils/types"
+import (
+	"fmt"
+	"os"
+	"strings"
+
+	"github.com/CodingWithKarim/AgentK/internal/utils/types"
+)
 
 const (
 	OPENAI      types.Provider = "OpenAI"
@@ -15,43 +21,50 @@ const (
 	DEEPINFRA   types.Provider = "DeepInfra"
 )
 
-var Providers = []types.Provider{
-	OPENAI, ANTHROPIC, GOOGLE, xAI, GROQ,
-	PERPLEXITY, COHERE, HUGGINGFACE, OPENROUTER, DEEPINFRA,
+var OpenAICompatibleProviders = []types.Provider{
+	OPENAI, GOOGLE, xAI, GROQ, PERPLEXITY, COHERE, HUGGINGFACE, OPENROUTER, DEEPINFRA,
 }
 
 var ProviderEndpointsMap = map[types.Provider]types.ProviderEndpoints{
 	OPENAI: {
-		BaseURL: "https://api.openai.com/v1",
+		BaseURL:       "https://api.openai.com/v1",
+		ModelEndpoint: "https://api.openai.com/v1",
 	},
 	ANTHROPIC: {
 		BaseURL:       "https://api.anthropic.com/v1/messages",
 		ModelEndpoint: "https://api.anthropic.com/v1/models",
 	},
 	GOOGLE: {
-		BaseURL: "https://generativelanguage.googleapis.com/v1beta/openai",
+		BaseURL:       "https://generativelanguage.googleapis.com/v1beta/openai",
+		ModelEndpoint: "https://generativelanguage.googleapis.com/v1beta/openai",
 	},
 	xAI: {
-		BaseURL: "https://api.x.ai/v1",
+		BaseURL:       "https://api.x.ai/v1",
+		ModelEndpoint: "https://api.x.ai/v1",
 	},
 	GROQ: {
-		BaseURL: "https://api.groq.com/openai/v1",
+		BaseURL:       "https://api.groq.com/openai/v1",
+		ModelEndpoint: "https://api.groq.com/openai/v1",
 	},
 	COHERE: {
 		BaseURL:       "https://api.cohere.ai/compatibility/v1",
 		ModelEndpoint: "https://api.cohere.ai/v1",
 	},
 	PERPLEXITY: {
-		BaseURL: "https://api.perplexity.ai",
+		BaseURL:       "https://api.perplexity.ai",
+		ModelEndpoint: "https://api.perplexity.ai",
 	},
 	OPENROUTER: {
-		BaseURL: "https://openrouter.ai/api/v1",
+		BaseURL:       "https://openrouter.ai/api/v1",
+		ModelEndpoint: "https://openrouter.ai/api/v1",
 	},
 	DEEPINFRA: {
-		BaseURL: "https://api.deepinfra.com/v1/",
+		BaseURL:       "https://api.deepinfra.com/v1/",
+		ModelEndpoint: "https://api.deepinfra.com/v1/",
 	},
 	HUGGINGFACE: {
-		BaseURL: "https://router.huggingface.co/v1",
+		BaseURL:       "https://router.huggingface.co/v1",
+		ModelEndpoint: "https://router.huggingface.co/v1",
 	},
 }
 
@@ -92,4 +105,10 @@ var DisallowedModels = []string{
 	"codegen",
 	"code-llama",
 	"veo-",
+}
+
+var ErrProviderNotSupported = fmt.Errorf("the specified provider is not supported")
+
+func GetKey(provider types.Provider) string {
+	return os.Getenv(fmt.Sprintf("%s_API_KEY", strings.ToUpper(string(provider))))
 }

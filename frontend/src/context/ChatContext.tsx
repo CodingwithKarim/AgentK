@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import Swal from "sweetalert2";
 import {
   ChatMessage,
@@ -7,7 +7,8 @@ import {
   Provider
 } from "../utils/types/types";
 import {
-  fetchModels
+  fetchModels,
+  refreshModelsForProvider
 } from "../api/modelApi";
 import {
   sendChatMessage,
@@ -27,6 +28,7 @@ import {
   addMessage,
   deleteMessage,
   trimAfterMessage,
+  updateMessageModel,
 } from "../db/messages"
 
 
@@ -67,6 +69,7 @@ type ChatContextType = {
   handleSubmit: () => Promise<void>;
   handleDeleteMessage: (id: string) => Promise<void>;
   handleResubmitFromMessage: (clickedId: string) => Promise<void>;
+  handleRefreshProviderModels: (provider: string) => Promise<Model[]>;
 };
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -92,10 +95,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const sideBarRef = useRef<HTMLDivElement>(null);
 
-const modeRef = useRef(mode);
-const maxTokensRef = useRef(maxTokens);
-useEffect(() => { modeRef.current = mode; }, [mode]);
-useEffect(() => { maxTokensRef.current = maxTokens; }, [maxTokens]);
+  const modeRef = useRef(mode);
+  const maxTokensRef = useRef(maxTokens);
+  useEffect(() => { modeRef.current = mode; }, [mode]);
+  useEffect(() => { maxTokensRef.current = maxTokens; }, [maxTokens]);
 
   const sessionActive = Boolean(selectedSession);
 
@@ -162,6 +165,17 @@ useEffect(() => { maxTokensRef.current = maxTokens; }, [maxTokens]);
     setSelectedSession(id);
     setInputPrompt("");
     setSidebarOpen(false);
+  };
+
+  const handleRefreshProviderModels = async (provider: string) => {
+    const refreshedModels = await refreshModelsForProvider(provider);
+
+    setModels(prev => [
+      ...prev.filter(m => m.provider !== provider),
+      ...refreshedModels,
+    ]);
+
+    return refreshedModels;
   };
 
   const handleRenameSession = async (id: string) => {
@@ -294,15 +308,21 @@ useEffect(() => { maxTokensRef.current = maxTokens; }, [maxTokens]);
     }
   };
 
+
   async function handleResubmitFromMessage(clickedId: string) {
+    console.log("Current model:", selectedModel);
+
     const snapshot = [...chatMessages];
-    const idx = snapshot.findIndex(m => m.id === clickedId);
+    const idx = snapshot.findIndex((m) => m.id === clickedId);
     if (idx === -1) return;
+
     const clicked = snapshot[idx];
     if (clicked.role !== "user") return;
 
-    const uiContext = snapshot.slice(0, idx + 1);
-    setChatMessages(uiContext);
+    const model = models.find((m) => m.id === selectedModel);
+    const modelName = model?.name ?? "";
+    const modelProvider = model?.provider ?? "";
+    const finalModelName = modelName || selectedModel;
 
     try {
       await trimAfterMessage({
@@ -311,19 +331,33 @@ useEffect(() => { maxTokensRef.current = maxTokens; }, [maxTokens]);
         sharedContext,
         modelId: selectedModel,
       });
+
+      const fresh = await fetchChatHistory(selectedSession, selectedModel, sharedContext);
+
+      const updated = fresh.map((m) =>
+        m.id === clickedId ? { ...m, model_name: finalModelName } : m
+      );
+      setChatMessages(updated);
+
+      await updateMessageModel(clickedId, selectedModel, modelName);
     } catch (e) {
       console.error("DB trim failed:", e);
     }
 
-    const model = models.find(m => m.id === selectedModel);
-    const modelName = model?.name ?? "";
-    const modelProvider = model?.provider ?? "";
-    const tempId = "temp-" + Date.now();
+    // --- placeholder message ---
+    const tempId = `temp-${Date.now()}`;
     const placeholderTs = Date.now();
 
-    setChatMessages(prev => [
+    setChatMessages((prev) => [
       ...prev,
-      { id: tempId, role: "assistant", text: "", model_name: modelName || selectedModel, ts: placeholderTs, pending: true }
+      {
+        id: tempId,
+        role: "assistant",
+        text: "",
+        model_name: finalModelName,
+        ts: placeholderTs,
+        pending: true,
+      },
     ]);
 
     const tokens = modeRef.current === "custom" ? maxTokensRef.current : 0;
@@ -347,12 +381,16 @@ useEffect(() => { maxTokensRef.current = maxTokens; }, [maxTokens]);
         ts: Date.now(),
       });
 
-      setChatMessages(prev =>
-        prev.map(m => (m.id === tempId ? { ...m, id: String(pk), text: resp, model_name: modelName, pending: false } : m))
+      setChatMessages((prev) =>
+        prev.map((m) =>
+          m.id === tempId
+            ? { ...m, id: String(pk), text: resp, model_name: modelName, pending: false }
+            : m
+        )
       );
     } catch (err) {
       console.error("Resubmit failed:", err);
-      setChatMessages(prev => prev.filter(m => m.id !== tempId));
+      setChatMessages((prev) => prev.filter((m) => m.id !== tempId));
     }
   }
 
@@ -364,7 +402,7 @@ useEffect(() => { maxTokensRef.current = maxTokens; }, [maxTokens]);
     setInputPrompt("");
 
     const ts = Date.now();
-    
+
     let workingSessionId = selectedSession;
     if (!workingSessionId) {
       try {
@@ -409,7 +447,7 @@ useEffect(() => { maxTokensRef.current = maxTokens; }, [maxTokens]);
           id: String(userPk),
           role: "user",
           text,
-          model_name: undefined,
+          model_name: modelName || selectedModel,
         },
       ]);
 
@@ -523,6 +561,7 @@ useEffect(() => { maxTokensRef.current = maxTokens; }, [maxTokens]);
     handleSubmit,
     handleDeleteMessage,
     handleResubmitFromMessage,
+    handleRefreshProviderModels,
   };
 
   const isSwalOpen = () => document.body.classList.contains("swal2-shown");

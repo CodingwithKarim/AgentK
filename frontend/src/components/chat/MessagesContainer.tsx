@@ -13,11 +13,6 @@ export default function MessagesContainer() {
     [handleDeleteMessage]
   );
 
-  const onResubmit = useCallback(
-    (id: string) => handleResubmitFromMessage(id),
-    [handleResubmitFromMessage]
-  );
-
   useEffect(() => {
     if (!chatMessages.length) return;
 
@@ -70,7 +65,7 @@ export default function MessagesContainer() {
               key={message.id}
               chatMessage={message}
               onDelete={onDelete}
-              resubmitMessage={onResubmit}
+              resubmitMessage={handleResubmitFromMessage}
               isPending={message.pending === true}
             />
           ))}
