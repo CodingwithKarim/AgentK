@@ -1,9 +1,9 @@
 import { useState } from "react";
-import Sidebar from "./components/Sidebar/SideBar";
-import MessagesContainer from "./components/Chat/MessagesContainer";
-import ChatInput from "./components/Chat/ChatInput";
-import Header from "./components/Header/Header";
-import SettingsPage from "./components/Settings/Settings"; // default export
+import Sidebar from "./components/sidebar/SideBar";
+import MessagesContainer from "./components/chat/MessagesContainer";
+import ChatInput from "./components/chat/ChatInput";
+import Header from "./components/header/Header";
+import SettingsPage from "./components/settings/Settings";
 
 export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
