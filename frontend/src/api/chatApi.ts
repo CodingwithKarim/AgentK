@@ -13,8 +13,6 @@ export const sendChatMessage = async (
   ): Promise<string> => {
     const context = await buildContext(sessionID, modelID, sharedContext)
 
-    console.log("Context:", context)
-
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

@@ -37,3 +37,16 @@ export async function deleteSession(id: string) {
     return false;
   }
 }
+
+export async function deleteAllSessions() {
+  try {
+    await db.transaction("rw", db.sessions, db.messages, async () => {
+      await db.messages.clear();
+      await db.sessions.clear();
+    });
+    return true;
+  } catch (err) {
+    console.error("Failed to delete all sessions:", err);
+    return false;
+  }
+}

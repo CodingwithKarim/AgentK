@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { PlusIcon } from "../icons/icons";
+import { PlusIcon, TrashIcon } from "../icons/icons";
 import { useChat } from "../../context/ChatContext";
 import IconButton from "../icons/IconButton";
 import SessionItem from "./SessionItem";
@@ -13,6 +13,7 @@ function Sidebar() {
     handlePickSession,
     handleRenameSession,
     handleDeleteSession,
+    handleDeleteAllSessions,
     sideBarRef,
   } = useChat();
 
@@ -35,15 +36,37 @@ function Sidebar() {
         <div className="font-semibold text-sm text-zinc-800 tracking-tight">
           Your Chats
         </div>
-        <IconButton
-          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50/70 transition"
-          title="New chat"
-          onClick={handleNewChat}
-        >
-          <PlusIcon />
-        </IconButton>
-      </div>
 
+        <div className="flex items-center">
+          <IconButton
+            className="
+        text-blue-600
+        hover:text-blue-700
+        hover:bg-blue-50/70
+        transition
+      "
+            title="New chat"
+            onClick={handleNewChat}
+          >
+            <PlusIcon />
+          </IconButton>
+
+          <IconButton
+            className="
+        text-red-500
+        hover:text-red-600
+        hover:bg-red-50/70
+        transition
+      "
+            title="Delete all chats"
+            disabled={sessions.length === 0}
+            onClick={handleDeleteAllSessions}
+
+          >
+            <TrashIcon />
+          </IconButton>
+        </div>
+      </div>
       <div className="h-[calc(100%-3rem)] overflow-y-auto p-3 space-y-2">
         {sessions.length === 0 ? (
           <div className="text-xs text-zinc-500 px-1 py-8 text-center">

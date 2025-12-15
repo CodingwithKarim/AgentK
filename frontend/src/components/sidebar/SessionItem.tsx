@@ -1,7 +1,6 @@
-import React, { useCallback } from "react";
-import { PencilIcon, PlusIcon, TrashIcon } from "../icons/icons";
-import { useChat } from "../../context/ChatContext";
-import IconButton from "../icons/IconButton";
+import React from "react";
+import { TrashIcon } from "../icons/icons";
+import { PencilIcon } from "../icons/icons";
 
 interface Session {
   id: string;

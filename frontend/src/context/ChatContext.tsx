@@ -20,7 +20,8 @@ import {
   createSession,
   fetchSessions,
   deleteSession,
-  renameSession
+  renameSession,
+  deleteAllSessions
 } from "../db/sessions"
 import {
   fetchChatHistory,
@@ -45,7 +46,6 @@ type ChatContextType = {
   selectedSession: string;
   selectedModel: string;
   sharedContext: boolean;
-  inputPrompt: string;
   isLoading: boolean;
   menuOpen: boolean;
   maxTokens: number;
@@ -54,7 +54,6 @@ type ChatContextType = {
   setSelectedSession: (id: string) => void;
   setSelectedModel: (id: string) => void;
   setSharedContext: (shared: boolean) => void;
-  setInputPrompt: (prompt: string) => void;
   setMenuOpen: (open: boolean) => void;
   setSidebarOpen: (isOpen: boolean) => void;
   setModels: React.Dispatch<React.SetStateAction<Model[]>>
@@ -65,8 +64,9 @@ type ChatContextType = {
   handlePickSession: (id: string) => void;
   handleRenameSession: (id: string, title: string) => void;
   handleDeleteSession: (id: string) => Promise<void>;
+  handleDeleteAllSessions: () => Promise<void>;
   handleClearContext: () => Promise<void>;
-  handleSubmit: () => Promise<void>;
+  handleSubmit: (text: string) => Promise<void>;
   handleDeleteMessage: (id: string) => Promise<void>;
   handleResubmitFromMessage: (clickedId: string) => Promise<void>;
   handleRefreshProviderModels: (provider: string) => Promise<Model[]>;
@@ -84,7 +84,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [selectedSession, setSelectedSession] = useState<string>("");
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [sharedContext, setSharedContext] = useState<boolean>(false);
-  const [inputPrompt, setInputPrompt] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [maxTokens, setMaxTokens] = useState(1000);
   const [mode, setMode] = useState<"auto" | "custom">("auto");
@@ -103,7 +102,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const sessionActive = Boolean(selectedSession);
 
   useEffect(() => {
-    initializeDB().then(() => console.log("DB ready")).catch(error => console.log("Failed to init DB", error))
+    initializeDB().catch(error => console.log("Failed to init DB", error))
     fetchSessions().then(setSessions).catch(err => console.log(err))
     fetchModels()
       .then((modelList) => {
@@ -157,13 +156,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const handleNewChat = async () => {
     setSelectedSession("");
     setChatMessages([]);
-    setInputPrompt("");
     setSidebarOpen(false);
   };
 
   const handlePickSession = async (id: string) => {
     setSelectedSession(id);
-    setInputPrompt("");
     setSidebarOpen(false);
   };
 
@@ -225,6 +222,47 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       prev.map(s => (s.id === id ? { ...s, name: cleaned } : s)) // <-- name
     );
   };
+
+  const handleDeleteAllSessions = async () => {
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
+
+    if (isMobile) setSidebarOpen(false);
+
+    const { isConfirmed } = await Swal.fire({
+      title: "<span class='text-red-600'>Are you sure?</span>",
+      html: "<p class='text-gray-600'>Deleting all chats is permanent and cannot be undone.</p>",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete all",
+      cancelButtonText: "Cancel",
+      reverseButtons: true,
+      buttonsStyling: false,
+      width: 400,
+      customClass: {
+        popup: "rounded-2xl p-6 shadow-lg bg-white",
+        title: "text-lg font-semibold text-gray-800",
+        htmlContainer: "text-sm text-gray-600 mt-2",
+        confirmButton: "px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium",
+        cancelButton: "px-5 py-2.5 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium",
+        actions: "mt-6 flex justify-end space-x-4",
+      },
+      backdrop: 'rgba(31, 41, 55, 0.6)',
+    });
+    if (!isConfirmed) return;
+
+    try {
+      const ok = await deleteAllSessions();
+      if (ok) {
+        setSessions([]);
+        setSelectedSession("");
+        setChatMessages([]);
+        await Swal.fire({ icon: "success", iconColor: "#ef4444", title: "Deleted all!", timer: 1200, showConfirmButton: false });
+      }
+    } catch (e) {
+      console.error(e);
+      await Swal.fire({ icon: "error", title: "Oops…", text: "Please try again." });
+    }
+  }
 
   const handleDeleteSession = async (id: string) => {
     const isMobile = window.matchMedia("(max-width: 768px)").matches;
@@ -310,8 +348,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 
   async function handleResubmitFromMessage(clickedId: string) {
-    console.log("Current model:", selectedModel);
-
     const snapshot = [...chatMessages];
     const idx = snapshot.findIndex((m) => m.id === clickedId);
     if (idx === -1) return;
@@ -394,12 +430,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
-  const handleSubmit = async () => {
-    const text = inputPrompt.trim();
+  const handleSubmit = async (text: string) => {
+    text = text.trim();
+
     if (!text || isLoading || !selectedModel) return;
 
     setIsLoading(true);
-    setInputPrompt("");
 
     const ts = Date.now();
 
@@ -536,7 +572,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     selectedSession,
     selectedModel,
     sharedContext,
-    inputPrompt,
     isLoading,
     menuOpen,
     sidebarOpen,
@@ -546,7 +581,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSelectedSession,
     setSelectedModel,
     setSharedContext,
-    setInputPrompt,
     setMenuOpen,
     setSidebarOpen,
     setModels,
@@ -557,6 +591,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     handlePickSession,
     handleRenameSession,
     handleDeleteSession,
+    handleDeleteAllSessions,
     handleClearContext,
     handleSubmit,
     handleDeleteMessage,

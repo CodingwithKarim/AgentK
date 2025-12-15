@@ -5,8 +5,6 @@ import { useChat } from "../../context/ChatContext";
 
 export default function ChatInput() {
   const {
-    inputPrompt,
-    setInputPrompt,
     handleSubmit,
     isLoading,
     maxTokens,
@@ -18,10 +16,14 @@ export default function ChatInput() {
   const [showPopover, setShowPopover] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const [inputPrompt, setInputPrompt] = useState("");
 
   const canSend = !isLoading && inputPrompt.trim().length > 0;
 
-  const handleSend = () => handleSubmit();
+  const handleSend = () => {
+    handleSubmit(inputPrompt)
+    setInputPrompt("")
+  } 
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
