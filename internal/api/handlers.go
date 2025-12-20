@@ -32,7 +32,19 @@ func ChatHandler(response http.ResponseWriter, request *http.Request) {
 	llmReply, err := chatservice.GenerateChatResponse(chatRequest)
 
 	if err != nil {
-		writeError(response, http.StatusInternalServerError, fmt.Sprintf("Unable to process chat message: %v", err))
+		fmt.Printf(
+			"[ERROR] provider=%s model=%s err=%v",
+			chatRequest.Provider,
+			chatRequest.ModelID,
+			err,
+		)
+
+		msg := normalizeProviderError(string(chatRequest.Provider), err)
+
+		writeJSON(response, http.StatusBadGateway, map[string]string{
+			"error": msg,
+		})
+
 		return
 	}
 

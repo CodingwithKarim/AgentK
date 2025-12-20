@@ -107,6 +107,14 @@ var DisallowedModels = []string{
 	"veo-",
 }
 
+var AuthSubstrings = []string{
+	"invalid api key",
+	"incorrect api key",
+	"invalid x-api-key",
+	"no cookie auth credentials",
+	"invalid username or password",
+}
+
 var ErrProviderNotSupported = fmt.Errorf("the specified provider is not supported")
 
 func GetKey(provider types.Provider) string {
