@@ -219,7 +219,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const cleaned = name.trim() || "Untitled";
     setSessions(prev =>
-      prev.map(s => (s.id === id ? { ...s, name: cleaned } : s)) // <-- name
+      prev.map(s => (s.id === id ? { ...s, name: cleaned } : s))
     );
   };
 
@@ -380,7 +380,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error("DB trim failed:", e);
     }
 
-    // --- placeholder message ---
     const tempId = `temp-${Date.now()}`;
     const placeholderTs = Date.now();
 
@@ -424,9 +423,19 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             : m
         )
       );
-    } catch (err) {
+    } catch (err: any) {
       console.error("Resubmit failed:", err);
-      setChatMessages((prev) => prev.filter((m) => m.id !== tempId));
+      setChatMessages((prev) =>
+        prev.map((m) =>
+          m.id === tempId
+            ? {
+              ...m,
+              pending: false,
+              text: err?.message || "Resubmission failed.",
+            }
+            : m
+        )
+      );
     }
   }
 
@@ -468,7 +477,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const modelName = selected?.name ?? "";
       const modelProvider = selected?.provider ?? "";
 
-      const userPk = await addMessage({
+      var userPk = await addMessage({
         sessionId: workingSessionId,
         role: "user",
         content: text,
@@ -546,7 +555,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
               pending: false,
               text:
                 (arr[i].text || "") +
-                `\n[Error: ${e?.message || "send failed"}]`,
+                `\n${e?.message || "send failed"}`,
             };
             break;
           }
