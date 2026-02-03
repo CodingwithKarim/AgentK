@@ -1,6 +1,6 @@
 import Dexie from "dexie";
 import { database as db } from "./index";
-import type { MessageRow, Role, ChatMessage } from "../utils/types/types"; 
+import type { MessageRow, Role, ChatMessage, MessageContent } from "../utils/types/types"; 
 
 export async function getMessageById(id: string | number): Promise<MessageRow | undefined> {
   const pk = typeof id === "number" ? id : Number(id);
@@ -106,7 +106,7 @@ export async function fetchChatHistory(
 export function addMessage(args: {
   sessionId: string;
   role: Role;
-  content: string;
+  content: MessageContent;
   modelId: string;
   modelName?: string;
   ts?: number;
@@ -161,7 +161,7 @@ function rowToChat(m: MessageRow): ChatMessage {
   return {
     id: String(m.id),
     role: m.role,
-    text: m.content,
+    content: m.content,
     model_name: m.modelName,
   };
 }

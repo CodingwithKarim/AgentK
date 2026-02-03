@@ -21,21 +21,32 @@ export type ChatMessage = {
   id: string;
   role: Role;
   time?: string;
-  text: string;
+  content: MessageContent;
   model_name?: string;
   pending?: boolean
 };
 
+export type ContentBlock =
+  | { type: "text"; text: string }
+  | { type: "image_url"; image_url: { url: string } };
+
+export type MessageContent = string | ContentBlock[];
+
+
  export type MessageRow = {
-  id?: number;                   // auto
-  sessionId: string;             // FK -> sessions.id (logical)
-  modelId: string;               // e.g. "gpt-4o"
-  modelName: string;             // display label
+  id?: number;                   
+  sessionId: string;             
+  modelId: string;               
+  modelName: string;             
   role: "user" | "assistant";
-  content: string;               // message text
-  ts: number;                    // epoch ms
+  content: MessageContent;              
+  ts: number;                    
 };
 
 export type Provider = "OpenAI" | "Anthropic" | "Google" |  "Groq" | "Perplexity" | "Cohere" | "HuggingFace" | "xAI" | "OpenRouter" | "DeepInfra" | ""
 
 export type Role = "user" | "assistant";
+
+export type ImageAttachment =
+  | { type: "url"; url: string }
+  | { type: "file"; name: string; mime: string; data: string };

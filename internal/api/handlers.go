@@ -19,7 +19,7 @@ func ChatHandler(response http.ResponseWriter, request *http.Request) {
 	chatRequest := &types.ChatRequest{}
 
 	// Limit the size of the request body to prevent abuse
-	decoder := json.NewDecoder(http.MaxBytesReader(response, request.Body, 1<<20))
+	decoder := json.NewDecoder(http.MaxBytesReader(response, request.Body, 10<<20))
 	decoder.DisallowUnknownFields()
 
 	// Decode the JSON request body into the ChatRequest struct

@@ -7,7 +7,7 @@ import rehypeKatex from "rehype-katex";
 import rehypeHighlight from "rehype-highlight";
 import "katex/dist/katex.min.css";
 import "highlight.js/styles/github-dark.css";
-import { ChatMessage } from "../../utils/types/types";
+import { ChatMessage, MessageContent } from "../../utils/types/types";
 import { X, RefreshCw, Clipboard, Check, Loader2 } from "lucide-react";
 
 interface MessageBubbleProps {
@@ -180,7 +180,7 @@ function MessageBubble({
     "bg-blue-50 border-blue-100 text-zinc-900 dark:bg-blue-900 dark:border-blue-800 dark:text-zinc-100";
 
   const showHeader =
-    !isUser && !isAssistantPending && (chatMessage.text?.trim().length ?? 0) > 0;
+    !isUser && !isAssistantPending && (typeof chatMessage.content === "string" ? chatMessage.content.trim().length : chatMessage.content?.length ?? 0) > 0;
   const modelHeaderClass = showHeader
     ? "text-[10px] font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400 ml-2 mb-0.5 select-none"
     : "h-4 w-0 overflow-hidden mb-1 ml-1 select-none";
@@ -250,13 +250,7 @@ function MessageBubble({
               <span>Thinking…</span>
             </div>
           ) : (
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm, remarkMath, remarkEmoji]}
-              rehypePlugins={[rehypeHighlight, rehypeKatex]}
-              components={markdownComponents}
-            >
-              {chatMessage.text || ""}
-            </ReactMarkdown>
+            renderMessageContent(chatMessage.content)
           )}
         </div>
 
@@ -272,8 +266,50 @@ export default memo(MessageBubble, (prev, next) => {
     prev.isPending === next.isPending &&
     prev.resubmitMessage === next.resubmitMessage &&
     a.id === b.id &&
-    a.text === b.text &&
+    a.content === b.content &&
     a.model_name === b.model_name &&
     a.role === b.role
   );
 });
+
+function renderMessageContent(content: MessageContent) {
+  if (typeof content === "string") {
+    return (
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm, remarkMath, remarkEmoji]}
+        rehypePlugins={[rehypeHighlight, rehypeKatex]}
+        components={markdownComponents}
+      >
+        {content}
+      </ReactMarkdown>
+    );
+  }
+
+  return content.map((block, i) => {
+    if (block.type === "text") {
+      return (
+        <ReactMarkdown
+          key={i}
+          remarkPlugins={[remarkGfm, remarkMath, remarkEmoji]}
+          rehypePlugins={[rehypeHighlight, rehypeKatex]}
+          components={markdownComponents}
+        >
+          {block.text}
+        </ReactMarkdown>
+      );
+    }
+
+    if (block.type === "image_url") {
+      return (
+        <img
+          key={i}
+          src={block.image_url.url}
+          alt="uploaded"
+          className="rounded-lg max-w-full my-2 border border-zinc-200 dark:border-zinc-700"
+        />
+      );
+    }
+
+    return null;
+  });
+}

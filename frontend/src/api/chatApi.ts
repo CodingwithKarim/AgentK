@@ -1,13 +1,12 @@
 import { fetchChatHistory } from "../db/messages";
-import { Provider } from "../utils/types/types";
+import { MessageContent, Provider } from "../utils/types/types";
 
-type ChatAPIMessage = { role: "user" | "assistant"; content: string; ts?: number };
+type ChatAPIMessage = { role: "user" | "assistant"; content: MessageContent; ts?: number };
 
 export const sendChatMessage = async (
   sessionID: string,
   modelID: string,
   provider: Provider,
-  message: string,
   sharedContext: boolean,
   tokens: number
 ): Promise<string> => {
@@ -19,7 +18,6 @@ export const sendChatMessage = async (
     body: JSON.stringify({
       modelID,
       provider,
-      message,
       context,
       tokens,
     }),
@@ -51,6 +49,6 @@ async function buildContext(
 
   return rows.map(r => ({
     role: r.role,
-    content: r.text,
+    content: r.content,
   }));
 }

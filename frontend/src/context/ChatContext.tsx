@@ -4,7 +4,10 @@ import {
   ChatMessage,
   Session,
   Model,
-  Provider
+  Provider,
+  ImageAttachment,
+  MessageContent,
+  ContentBlock
 } from "../utils/types/types";
 import {
   fetchModels,
@@ -66,7 +69,7 @@ type ChatContextType = {
   handleDeleteSession: (id: string) => Promise<void>;
   handleDeleteAllSessions: () => Promise<void>;
   handleClearContext: () => Promise<void>;
-  handleSubmit: (text: string) => Promise<void>;
+  handleSubmit: (text: string, images: ImageAttachment[]) => Promise<void>;
   handleDeleteMessage: (id: string) => Promise<void>;
   handleResubmitFromMessage: (clickedId: string) => Promise<void>;
   handleRefreshProviderModels: (provider: string) => Promise<Model[]>;
@@ -388,7 +391,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       {
         id: tempId,
         role: "assistant",
-        text: "",
+        content: "",
         model_name: finalModelName,
         ts: placeholderTs,
         pending: true,
@@ -402,7 +405,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         selectedSession,
         selectedModel,
         modelProvider,
-        clicked.text ?? "",
         sharedContext,
         tokens
       );
@@ -419,7 +421,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setChatMessages((prev) =>
         prev.map((m) =>
           m.id === tempId
-            ? { ...m, id: String(pk), text: resp, model_name: modelName, pending: false }
+            ? { ...m, id: String(pk), content: resp, model_name: modelName, pending: false }
             : m
         )
       );
@@ -431,7 +433,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             ? {
               ...m,
               pending: false,
-              text: err?.message || "Resubmission failed.",
+              content: err?.message || "Resubmission failed.",
             }
             : m
         )
@@ -439,10 +441,26 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
-  const handleSubmit = async (text: string) => {
+  const handleSubmit = async (text: string, images: ImageAttachment[]) => {
     text = text.trim();
 
     if (!text || isLoading || !selectedModel) return;
+
+    const content: MessageContent =
+      images.length === 0
+        ? text
+        : ([
+          { type: "text", text },
+          ...images.map((img): ContentBlock => ({
+            type: "image_url",
+            image_url: {
+              url:
+                img.type === "url"
+                  ? img.url
+                  : `data:${img.mime};base64,${img.data}`,
+            },
+          })),
+        ]);
 
     setIsLoading(true);
 
@@ -461,9 +479,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error(e);
         setChatMessages(prev => {
           const arr = [...prev];
-          const idx = arr.findIndex(m => m.role === "assistant" && m.text === "");
+          const idx = arr.findIndex(m => m.role === "assistant" && m.content === "");
           if (idx !== -1) {
-            arr[idx] = { ...arr[idx], text: "[Error creating session]" };
+            arr[idx] = { ...arr[idx], content: "[Error creating session]" };
           }
           return arr;
         });
@@ -480,7 +498,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       var userPk = await addMessage({
         sessionId: workingSessionId,
         role: "user",
-        content: text,
+        content: content,
         modelId: selectedModel,
         modelName,
         ts,
@@ -491,7 +509,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         {
           id: String(userPk),
           role: "user",
-          text,
+          content: content,
           model_name: modelName || selectedModel,
         },
       ]);
@@ -502,7 +520,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         {
           id: tempAssistantId,
           role: "assistant",
-          text: "",
+          content: "",
           model_name: modelName || selectedModel,
           pending: true
         },
@@ -514,7 +532,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         workingSessionId,
         selectedModel,
         modelProvider,
-        text,
         sharedContext,
         tokens
       );
@@ -534,7 +551,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return {
               id: String(assistantPk),
               role: "assistant",
-              text: resp,
+              content: resp,
               model_name: modelName,
               pending: false
             };
@@ -553,8 +570,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             arr[i] = {
               ...arr[i],
               pending: false,
-              text:
-                (arr[i].text || "") +
+              content:
+                (arr[i].content || "") +
                 `\n${e?.message || "send failed"}`,
             };
             break;
