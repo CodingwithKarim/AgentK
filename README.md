@@ -93,6 +93,15 @@ http://localhost:8080
 
 ---
 
+#### Multimodal Image Inputs
+- Combine text and image inputs in a single prompt
+- Attach images from local file storage
+- Reference images via absolute URLs hosted on web
+- Paste images directly from the clipboard (screenshot support)
+- Automatic provider-specific image handling
+
+---
+
 #### Smart Context Control
 - Choose whether models share the same conversation or stay fully separate
 - Shared mode lets models reference earlier messages and compare responses
@@ -369,19 +378,12 @@ AgentK gives control back to the user. It turns provider APIs into a practical w
 #### Context Handling
 - Conversation context is not automatically trimmed or summarized.
 - There is no backend system to detect token limits or manage context size.
-- Users must manually manage context by deleting or resubmitting messages.
-
-#### Conversation Input Support
-- Only text-based chat models are supported.
-- Image, audio, and file-based inputs are not supported in conversations.
-- Attachments are ignored, and all interactions must be text only.
+- Users must manually manage context by deleting or resubmitting messages (preferred method).
 
 ---
 
 ### Summary
 
-✔ AgentK supports **text-based chat models only**  
-⚠ Image, audio, and file inputs are **not supported**  
 ⚠ There is no automatic context management. Users must manually trim messages  
 ⚠ Model filtering is best effort only and some models may not work as expected
 
