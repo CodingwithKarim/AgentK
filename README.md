@@ -275,14 +275,13 @@ AgentK is a unified local server that provides both the frontend UI and backend 
 
 ### Architecture Overview
 
-| Component   | Technology                          | Purpose                                    |
-|-------------|-------------------------------------|--------------------------------------------|
-| Frontend    | React + Tailwind + Vite             | Renders the UI and handles user input      |
-| Backend     | Go (REST API)                       | Processes requests and interacts with APIs |
-| Storage     | IndexedDB (browser/local only)      | Saves sessions and model data locally      |
-| Deployment  | Docker / Manual Go + Vite setup     | Runs the full stack on the user's machine  |
+| Component   | Technology                          | Purpose                                             |
+|-------------|-------------------------------------|-----------------------------------------------------|
+| Frontend    | React + Tailwind + Vite             | Renders the UI and handles user input               |
+| Backend     | Go                                  | Processes requests and interacts with provider APIs |
+| Storage     | IndexedDB (browser/local only)      | Saves message, session, and model data locally      |
+| Deployment  | Docker / Manual Go + Vite setup     | Runs the full stack on the user's machine           |
 
-All data stays on the user’s computer. No third-party servers owned by AgentK receive any data.
 
 ---
 
