@@ -4,6 +4,10 @@ import Swal from "sweetalert2";
 import { Settings } from "lucide-react";
 import { useChat } from "../../context/ChatContext";
 import { ImageAttachment } from "../../utils/types/types";
+import {
+  Image as ImageIcon,
+  Globe,
+} from "lucide-react";
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve) => {
@@ -70,7 +74,6 @@ export default function ChatInput() {
       }
     }
   };
-
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -211,34 +214,44 @@ export default function ChatInput() {
                   {showAttach && (
                     <div
                       className="
-        absolute bottom-12 right-0
-        w-44
-        rounded-xl
-        border border-zinc-200
-        bg-white/80 backdrop-blur-md
-        shadow-[0_8px_20px_rgba(0,0,0,0.08)]
-        p-1
-        z-50
-        animate-fade-in
-      "
+                        absolute bottom-11 right-0 w-40
+                        rounded-xl
+                        bg-white
+                        border border-zinc-200
+                        shadow-[0_16px_40px_rgba(0,0,0,0.14)]
+                        p-1
+                        z-50
+                        origin-bottom-right
+                        animate-in fade-in zoom-in-95
+                      "
                     >
+                      <div
+                        className="
+                        absolute -bottom-2 right-4
+                        h-3 w-3 rotate-45
+                        bg-white
+                        border-r border-b border-zinc-200
+                      "
+                      />
+
                       <button
                         onClick={() => {
                           setShowAttach(false);
                           fileInputRef.current?.click();
                         }}
                         className="
-          flex items-center gap-2
-          w-full
-          px-3 py-2
-          rounded-lg
-          text-sm
-          text-zinc-800
-          hover:bg-zinc-100
-          transition
-        "
+                          flex items-center gap-2 w-full
+                          px-2.5 py-2
+                          rounded-lg
+                          text-[12px] font-medium text-zinc-800
+                          hover:bg-zinc-100
+                          active:bg-zinc-200/60
+                          transition
+                        "
                       >
-                        <span className="text-base">🖼️</span>
+                        <span className="grid place-items-center h-7 w-7 rounded-md bg-zinc-100">
+                          <ImageIcon className="h-4 w-4 text-zinc-700" />
+                        </span>
                         Upload image
                       </button>
 
@@ -246,7 +259,7 @@ export default function ChatInput() {
                         onClick={() => {
                           setShowAttach(false);
                           Swal.fire({
-                            title: "Add image URL",
+                            title: "Add Image URL",
                             input: "url",
                             inputPlaceholder: "https://example.com/image.png",
                             showCancelButton: true,
@@ -270,20 +283,20 @@ export default function ChatInput() {
                             if (!result.isConfirmed) return;
                             setImages((prev) => [...prev, { type: "url", url: result.value }]);
                           });
-
                         }}
                         className="
-          flex items-center gap-2
-          w-full
-          px-3 py-2
-          rounded-lg
-          text-sm
-          text-zinc-800
-          hover:bg-zinc-100
-          transition
-        "
+                          flex items-center gap-2 w-full
+                          px-2.5 py-2
+                          rounded-lg
+                          text-[12px] font-medium text-zinc-800
+                          hover:bg-zinc-100
+                          active:bg-zinc-200/60
+                          transition
+                        "
                       >
-                        <span className="text-base">🌐</span>
+                        <span className="grid place-items-center h-7 w-7 rounded-md bg-zinc-100">
+                          <Globe className="h-4 w-4 text-zinc-700" />
+                        </span>
                         Image URL
                       </button>
                     </div>
@@ -302,58 +315,71 @@ export default function ChatInput() {
 
                   {showPopover && (
                     <div
-                      style={{ width: "11.5rem" }}
-                      className="absolute bottom-12 right-0 rounded-xl border border-zinc-200 
-                      bg-white/80 backdrop-blur-md shadow-[0_8px_20px_rgba(0,0,0,0.08)] 
-                      p-2 z-50 animate-fade-in"
+                      className="
+                        absolute bottom-11 right-0 w-44
+                        rounded-xl
+                        bg-white
+                        border border-zinc-200
+                        shadow-[0_14px_40px_rgba(0,0,0,0.12)]
+                        p-2
+                        z-50
+                        origin-bottom-right
+                        animate-in fade-in zoom-in-95
+                      "
                     >
-                      <div className="flex flex-col gap-2 text-sm tracking-tight">
-                        <div
-                          role="tablist"
-                          aria-label="Token mode"
-                          className="flex overflow-hidden rounded-lg border border-zinc-200"
-                        >
+                      <div className="flex flex-col gap-2">
+                        <div className="flex rounded-lg bg-zinc-100 p-0.5">
                           <button
-                            role="tab"
-                            aria-selected={mode === "auto"}
                             onClick={() => setMode("auto")}
-                            className={`flex-1 px-2 py-1.5 text-xs font-medium transition ${mode === "auto"
-                              ? "bg-blue-600 text-white"
-                              : "text-zinc-700 hover:bg-zinc-100"
+                            className={`flex-1 rounded-md py-1 text-[12px] font-medium transition ${mode === "auto"
+                              ? "bg-blue-600 text-white shadow-sm"
+                              : "text-zinc-600 hover:text-zinc-900"
                               }`}
                           >
                             Auto
                           </button>
 
-                          <span className="w-px self-stretch bg-zinc-200" />
-
                           <button
-                            role="tab"
-                            aria-selected={mode === "custom"}
                             onClick={() => setMode("custom")}
-                            className={`flex-1 px-2 py-1.5 text-xs font-medium transition ${mode === "custom"
-                              ? "bg-blue-600 text-white"
-                              : "text-zinc-700 hover:bg-zinc-100"
+                            className={`flex-1 rounded-md py-1 text-[12px] font-medium transition ${mode === "custom"
+                              ? "bg-blue-600 text-white shadow-sm"
+                              : "text-zinc-600 hover:text-zinc-900"
                               }`}
                           >
                             Custom
                           </button>
                         </div>
-
                         {mode === "custom" && (
-                          <div className="flex items-center justify-between gap-2 animate-fade-in">
-                            <label className="text-zinc-700 font-medium select-none">
-                              Token Limit:
-                            </label>
+                          <div className="flex flex-col gap-1 pt-1 animate-in fade-in">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[12px] text-zinc-600">
+                                Token limit
+                              </span>
+                              <span className="text-[12px] font-medium text-zinc-800">
+                                {maxTokens}
+                              </span>
+                            </div>
+
                             <input
-                              type="number"
-                              value={maxTokens}
-                              onChange={(e) =>
-                                setMaxTokens(Number(e.target.value))
-                              }
-                              min={1}
-                              max={8192}
-                              className="w-20 rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm"
+                              type="range"
+                              min={0}
+                              max={TOKEN_OPTIONS.length - 1}
+                              step={1}
+                              value={TOKEN_OPTIONS.indexOf(maxTokens)}
+                              onChange={(e) => {
+                                const idx = Number(e.target.value);
+                                setMaxTokens(TOKEN_OPTIONS[idx]);
+                              }}
+                              className="
+                                h-1.5 w-full
+                                cursor-pointer
+                                appearance-none
+                                rounded-full
+                                bg-zinc-200
+                                accent-blue-600
+                                outline-none
+                                focus:outline-none
+                              "
                             />
                           </div>
                         )}
@@ -361,7 +387,6 @@ export default function ChatInput() {
                     </div>
                   )}
                 </div>
-
                 <button
                   type="button"
                   aria-label="Send message"
@@ -382,3 +407,13 @@ export default function ChatInput() {
     </div>
   );
 }
+
+const TOKEN_OPTIONS = [
+  256,
+  512,
+  1024,
+  2048,
+  4096,
+  8192,
+  16384,
+];

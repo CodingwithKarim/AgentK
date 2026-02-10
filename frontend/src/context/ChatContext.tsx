@@ -88,7 +88,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [sharedContext, setSharedContext] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [maxTokens, setMaxTokens] = useState(1000);
+  const [maxTokens, setMaxTokens] = useState(2048);
   const [mode, setMode] = useState<"auto" | "custom">("auto");
 
   const menuRef = useRef<HTMLDivElement>(null);
