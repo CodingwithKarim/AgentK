@@ -254,9 +254,16 @@ export default function ChatInput() {
                             cancelButtonText: "Cancel",
                             inputValidator: (value) => {
                               if (!value) return "Please enter an image URL";
-                              if (!value.match(/^https?:\/\/.+\.(png|jpg|jpeg|gif|webp)$/i)) {
-                                return "Please enter a valid image URL";
+
+                              if (value.startsWith("data:image/")) {
+                                if (!value.includes(";base64,")) return "Please enter a valid base64 data URI";
+                                return null;
                               }
+
+                              if (!value.match(/^https?:\/\/.+\.(png|jpg|jpeg|gif|webp)$/i)) {
+                                return "Please enter a valid image URL or base64 data URI";
+                              }
+
                               return null;
                             },
                           }).then((result) => {
