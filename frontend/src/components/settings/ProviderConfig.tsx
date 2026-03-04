@@ -1,4 +1,3 @@
-// src/components/Settings/ProviderConfig.tsx
 import React, {
   useMemo,
   useState,
@@ -12,7 +11,7 @@ import {
   Plus,
   ToggleLeft,
   ToggleRight,
-  RefreshCw,              
+  RefreshCw,
 } from "lucide-react";
 
 import Swal from "sweetalert2";
@@ -41,6 +40,7 @@ const ProviderConfigPanel: React.FC<ProviderConfigPanelProps> = ({
 }) => {
   const [justSaved, setJustSaved] = useState(false);
   const [selected, setSelected] = useState<Provider>("OpenAI");
+  const [search, setSearch] = useState("");
 
   const rowsFromModels = useMemo<RowDraft[]>(
     () =>
@@ -56,6 +56,18 @@ const ProviderConfigPanel: React.FC<ProviderConfigPanelProps> = ({
 
   const [draftRows, setDraftRows] = useState<RowDraft[]>(rowsFromModels);
   useEffect(() => setDraftRows(rowsFromModels), [rowsFromModels]);
+
+  const filteredRows = useMemo(() => {
+    if (!search.trim()) return draftRows;
+
+    const term = search.toLowerCase();
+
+    return draftRows.filter(
+      (r) =>
+        r.id.toLowerCase().includes(term) ||
+        r.alias.toLowerCase().includes(term)
+    );
+  }, [draftRows, search]);
 
   const handleToggleAll = useCallback(() => {
     const anyEnabled = draftRows.some((r) => r.enabled);
@@ -143,7 +155,6 @@ const ProviderConfigPanel: React.FC<ProviderConfigPanelProps> = ({
           Settings
         </h1>
 
-        {/* Provider Tabs */}
         <div className="flex flex-wrap justify-center gap-2 mb-6">
           {PROVIDERS.map((id) => {
             const isActive = selected === id;
@@ -151,12 +162,14 @@ const ProviderConfigPanel: React.FC<ProviderConfigPanelProps> = ({
             return (
               <button
                 key={id}
-                onClick={() => setSelected(id)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 ${
-                  isActive
-                    ? "bg-blue-600 text-white border-blue-600 shadow-md scale-[1.03]"
-                    : "bg-white text-zinc-700 border-zinc-200 hover:bg-blue-50 hover:text-blue-600"
-                }`}
+                onClick={() => {
+                  setSelected(id);
+                  setSearch("");
+                }}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 ${isActive
+                  ? "bg-blue-600 text-white border-blue-600 shadow-md scale-[1.03]"
+                  : "bg-white text-zinc-700 border-zinc-200 hover:bg-blue-50 hover:text-blue-600"
+                  }`}
               >
                 {label}
               </button>
@@ -174,7 +187,16 @@ const ProviderConfigPanel: React.FC<ProviderConfigPanelProps> = ({
             "
           >
             <span className="text-xs font-semibold text-zinc-700 tracking-wide">
-              Models — {selected}
+              <input
+                type="text"
+                placeholder={`Search ${selected} models...`}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="
+                  text-xs px-3 py-1.5 rounded-md border border-zinc-300
+                  bg-white focus:outline-none focus:ring-2 focus:ring-blue-500
+                  w-48 sm:w-64"
+              />
             </span>
 
             <div className="flex items-center gap-2 text-xs px-2 py-1">
@@ -214,7 +236,7 @@ const ProviderConfigPanel: React.FC<ProviderConfigPanelProps> = ({
 
           <div className="flex-1 overflow-y-auto min-h-0 pr-1 scrollbar-thin scrollbar-thumb-zinc-400/70 hover:scrollbar-thumb-zinc-500">
             <ModelList
-              rows={draftRows}
+              rows={filteredRows}
               onAliasChange={handleAliasChangeDraft}
               onToggle={handleToggleDraft}
             />
@@ -230,11 +252,10 @@ const ProviderConfigPanel: React.FC<ProviderConfigPanelProps> = ({
             <button
               onClick={handleSaveAll}
               disabled={justSaved}
-              className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                justSaved
-                  ? "bg-zinc-300 text-zinc-600 cursor-not-allowed"
-                  : "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg"
-              }`}
+              className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${justSaved
+                ? "bg-zinc-300 text-zinc-600 cursor-not-allowed"
+                : "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg"
+                }`}
             >
               <Save className="w-4 h-4" /> Save
             </button>
