@@ -1,4 +1,4 @@
-import React, { memo, useState } from "react";
+import { memo } from "react";
 import ReactMarkdown, { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -8,7 +8,8 @@ import rehypeHighlight from "rehype-highlight";
 import "katex/dist/katex.min.css";
 import "highlight.js/styles/github-dark.css";
 import { ChatMessage, MessageContent } from "../../utils/types/types";
-import { X, RefreshCw, Clipboard, Check, Loader2 } from "lucide-react";
+import { X, RefreshCw, Loader2 } from "lucide-react";
+import CodeBlock from "./CodeBlock";
 
 interface MessageBubbleProps {
   chatMessage: ChatMessage;
@@ -17,14 +18,7 @@ interface MessageBubbleProps {
   isPending?: boolean;
 }
 
-interface MarkdownCodeProps {
-  inline?: boolean;
-  className?: string;
-  children?: React.ReactNode;
-}
-
 const markdownComponents: Components = {
-  // --- Headings ---
   h1: ({ children }) => (
     <h1 className="text-2xl font-bold mt-4 mb-2 border-b border-zinc-200 dark:border-zinc-700 pb-1">
       {children}
@@ -33,15 +27,12 @@ const markdownComponents: Components = {
   h2: ({ children }) => <h2 className="text-xl font-semibold mt-3 mb-1">{children}</h2>,
   h3: ({ children }) => <h3 className="text-lg font-semibold mt-2 mb-1">{children}</h3>,
 
-  // --- Paragraphs ---
   p: ({ children }) => <p className="my-2 leading-relaxed text-[15px]">{children}</p>,
 
-  // --- Lists ---
   ul: ({ children }) => <ul className="list-disc ml-5 my-2 space-y-1">{children}</ul>,
   ol: ({ children }) => <ol className="list-decimal ml-5 my-2 space-y-1">{children}</ol>,
   li: ({ children }) => <li className="leading-snug">{children}</li>,
 
-  // --- Links ---
   a: ({ href, children }) => (
     <a
       href={href}
@@ -53,17 +44,14 @@ const markdownComponents: Components = {
     </a>
   ),
 
-  // --- Blockquote ---
   blockquote: ({ children }) => (
     <blockquote className="border-l-4 border-zinc-300 dark:border-zinc-700 pl-4 italic text-zinc-600 dark:text-zinc-400 my-2">
       {children}
     </blockquote>
   ),
 
-  // --- Horizontal Rule ---
   hr: () => <hr className="my-4 border-zinc-200 dark:border-zinc-700 opacity-60" />,
 
-  // --- Tables ---
   table: ({ children }) => (
     <table className="border border-zinc-300 dark:border-zinc-700 text-sm my-3 w-full border-collapse">
       {children}
@@ -79,8 +67,6 @@ const markdownComponents: Components = {
       {children}
     </td>
   ),
-
-  // --- Images ---
   img: ({ src, alt }) => (
     <img
       src={src ?? ""}
@@ -88,74 +74,11 @@ const markdownComponents: Components = {
       className="rounded-lg max-w-full my-2 border border-zinc-200 dark:border-zinc-700"
     />
   ),
-
-  // --- Mark / Highlight (from ==text==) ---
   mark: ({ children }) => (
     <mark className="px-1 rounded bg-yellow-200/60 dark:bg-yellow-500/30">{children}</mark>
   ),
 
-  code: ({ inline, className, children, ...props }: MarkdownCodeProps) => {
-    const lang = /language-(\w+)/.exec(className || "");
-    const [copied, setCopied] = useState(false);
-
-    const extractText = (nodes: React.ReactNode): string => {
-      if (typeof nodes === "string") return nodes;
-      if (Array.isArray(nodes)) return nodes.map(extractText).join("");
-      if (typeof nodes === "object" && nodes && "props" in (nodes as any)) {
-        return extractText((nodes as any).props.children);
-      }
-      return "";
-    };
-
-    const codeContent = extractText(children).trim();
-
-    const handleCopy = async () => {
-      try {
-        await navigator.clipboard.writeText(codeContent);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
-      } catch {
-        console.error("Copy failed");
-      }
-    };
-
-    if (inline) {
-      return (
-        <code
-          className="bg-zinc-100 dark:bg-zinc-800 text-red-600 dark:text-red-400 rounded px-1 py-0.5 break-words"
-          {...props}
-        >
-          {children}
-        </code>
-      );
-    }
-
-    return (
-      <div className="relative group my-2">
-        <pre className="bg-zinc-950 dark:bg-zinc-900 text-zinc-100 p-3 rounded-lg text-sm overflow-x-auto max-w-full">
-          <code className={lang ? `language-${lang[1]}` : ""}>{children}</code>
-        </pre>
-        <button
-          onClick={handleCopy}
-          className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-md 
-                     bg-zinc-800/80 text-zinc-200 text-xs opacity-0 group-hover:opacity-100
-                     transition-opacity duration-200 hover:bg-zinc-700 active:scale-95"
-        >
-          {copied ? (
-            <>
-              <Check size={12} className="text-green-400" />
-              Copied
-            </>
-          ) : (
-            <>
-              <Clipboard size={12} />
-              Copy
-            </>
-          )}
-        </button>
-      </div>
-    );
-  },
+  code: CodeBlock,
 };
 
 function MessageBubble({
@@ -186,15 +109,12 @@ function MessageBubble({
     : "h-4 w-0 overflow-hidden mb-1 ml-1 select-none";
 
   return (
-    <div data-message-id={chatMessage.id} className={`w-full flex mb-4 ${isUser ? "justify-end" : "justify-start"}`}>
+    <div data-message-id={chatMessage.id} className={`w-full flex mb-4 ${isUser ? "justify-end" : "justify-start"} ml-2.5`}>
       <div className="text-[11px] text-zinc-500/90 dark:text-zinc-400/90">
         {!isUser && (
           <div className={modelHeaderClass}>{showHeader ? chatMessage.model_name ?? "" : ""}</div>
         )}
-
-
         <div className={`${bubbleBase} ${isUser ? userStyle : assistantStyle}`}>
-          {/* corner spinner while pending */}
           {isPending && (
             <div
               className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-zinc-100 dark:bg-zinc-800 
