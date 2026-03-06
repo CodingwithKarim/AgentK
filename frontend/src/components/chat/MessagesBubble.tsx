@@ -109,7 +109,7 @@ function MessageBubble({
     : "h-4 w-0 overflow-hidden mb-1 ml-1 select-none";
 
   return (
-    <div data-message-id={chatMessage.id} className={`w-full flex mb-4 ${isUser ? "justify-end" : "justify-start"} ml-2.5`}>
+    <div data-message-id={chatMessage.id} className={`w-full flex mb-4 ${isUser ? "justify-end" : "justify-start"} ml-2`}>
       <div className="text-[11px] text-zinc-500/90 dark:text-zinc-400/90">
         {!isUser && (
           <div className={modelHeaderClass}>{showHeader ? chatMessage.model_name ?? "" : ""}</div>
