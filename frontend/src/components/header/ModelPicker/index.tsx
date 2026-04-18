@@ -3,6 +3,7 @@ import { Model } from "../../../utils/types/types";
 import { preferredOrder } from "../../../utils/constants";
 import { ProviderSelect } from "./ProviderSelect";
 import { ModelSelect } from "./ModelSelect";
+import { useChat } from "../../../context/ChatContext";
 
 function useIsMobile(threshold = 640) {
   const [isMobile, setIsMobile] = useState(
@@ -29,6 +30,8 @@ export default function ModelSelectByProvider({
   models,
   onSelectModel,
 }: ModelSelectorProps) {
+  const { sidebarOpen } = useChat();
+
   const isMobile = useIsMobile();
 
   const [provider, setProvider] = useState<string>("");
@@ -59,7 +62,6 @@ export default function ModelSelectByProvider({
     if (!provider) {
       setProvider(current?.provider ?? providers[0] ?? "");
     } else if (current?.provider && current.provider !== provider) {
-      // only update if current truly differs AND the selected model isn't shared by multiple providers
       const sameIdExists = models.filter((m) => m.id === current.id).length > 1;
       if (!sameIdExists) setProvider(current.provider);
     }
@@ -73,7 +75,6 @@ export default function ModelSelectByProvider({
   const modelPopRef = useRef<HTMLDivElement>(null);
   const lastAutoFixIdRef = useRef<string | null>(null);
 
-  // auto-fix if selected model becomes invalid
   useEffect(() => {
     const stillValid = models.some((m) => m.id === selectedModel && m.enabled);
     if (stillValid) {
@@ -123,7 +124,7 @@ export default function ModelSelectByProvider({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {!isMobile && (
+      {!isMobile && !sidebarOpen && (
         <>
           <ProviderSelect
             provider={provider}
@@ -137,20 +138,20 @@ export default function ModelSelectByProvider({
             onSelectModel={onSelectModel}
           />
 
-        <a
-        href="https://linktr.ee/karim373"
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="Please"
-        title="Please"
-      className="hover:opacity-100 transition-opacity"
-    >
-      <img
-        src="/logo.svg"
-        alt="AgentK logo"
-        className="h-7 w-auto opacity-95"
-      />
-    </a>
+          <a
+            href="https://linktr.ee/karim373"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Please"
+            title="Please"
+            className="hover:opacity-100 transition-opacity"
+          >
+            <img
+              src="/logo.svg"
+              alt="AgentK logo"
+              className="h-7 w-auto opacity-95"
+            />
+          </a>
         </>
       )}
 
