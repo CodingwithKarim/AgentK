@@ -9,16 +9,27 @@ import (
 	sdk "github.com/anthropics/anthropic-sdk-go"
 )
 
-func buildMessageParams(modelID string, tokens int64, messages any) sdk.MessageNewParams {
+func buildMessageParams(modelID string, tokens int64, systemPrompt string, messages any) sdk.MessageNewParams {
 	if tokens == 0 {
 		tokens = 4096
 	}
 
-	return sdk.MessageNewParams{
+	params := sdk.MessageNewParams{
 		Model:     sdk.Model(modelID),
 		MaxTokens: tokens,
 		Messages:  messages.([]sdk.MessageParam),
 	}
+
+	// Add system prompt if provided
+	if systemPrompt != "" {
+		params.System = []sdk.TextBlockParam{
+			{
+				Text: systemPrompt,
+			},
+		}
+	}
+
+	return params
 }
 
 func BuildAnthropicMessages(messages []types.Message) ([]sdk.MessageParam, error) {

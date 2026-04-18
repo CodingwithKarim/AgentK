@@ -5,10 +5,11 @@ import (
 )
 
 type ChatRequest struct {
-	ModelID  string          `json:"modelID"`
-	Provider Provider        `json:"provider"`
-	Context  json.RawMessage `json:"context"`
-	Tokens   int64           `json:"tokens"`
+	ModelID      string          `json:"modelID"`
+	Provider     Provider        `json:"provider"`
+	Context      json.RawMessage `json:"context"`
+	Tokens       int64           `json:"tokens"`
+	SystemPrompt string          `json:"systemPrompt,omitempty"`
 }
 
 type Model struct {

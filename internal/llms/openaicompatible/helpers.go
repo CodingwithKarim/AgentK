@@ -37,15 +37,39 @@ func allowOpenAIModel(id string) bool {
 	return true
 }
 
-func buildChatCompletionParams(modelID string, tokens int64, messages any) sdk.ChatCompletionNewParams {
+func buildChatCompletionParams(
+	modelID string,
+	tokens int64,
+	systemPrompt string,
+	messages any,
+) sdk.ChatCompletionNewParams {
+	msgs := messages.([]sdk.ChatCompletionMessageParamUnion)
+
+	finalMessages := make([]sdk.ChatCompletionMessageParamUnion, 0, len(msgs)+1)
+
+	// Add system prompt if provided
+	if systemPrompt != "" {
+		finalMessages = append(finalMessages, sdk.ChatCompletionMessageParamUnion{
+			OfSystem: &sdk.ChatCompletionSystemMessageParam{
+				Content: sdk.ChatCompletionSystemMessageParamContentUnion{
+					OfString: sdk.String(systemPrompt),
+				},
+			},
+		})
+	}
+
+	// Add the rest of the messages
+	finalMessages = append(finalMessages, msgs...)
+
 	params := sdk.ChatCompletionNewParams{
 		Model:    modelID,
-		Messages: messages.([]sdk.ChatCompletionMessageParamUnion),
+		Messages: finalMessages,
 	}
 
 	if tokens > 0 {
 		params.MaxCompletionTokens = param.Opt[int64]{Value: tokens}
 	}
+
 	return params
 }
 

@@ -15,7 +15,7 @@ type AnthropicClient struct {
 
 func (c *AnthropicClient) Chat(chatRequest *types.ChatRequest, contextMessages any) (string, error) {
 	// Generate a chat completion
-	llmResponse, err := c.Client.Messages.New(context.Background(), buildMessageParams(chatRequest.ModelID, chatRequest.Tokens, contextMessages))
+	llmResponse, err := c.Client.Messages.New(context.Background(), buildMessageParams(chatRequest.ModelID, chatRequest.Tokens, chatRequest.SystemPrompt, contextMessages))
 
 	if err != nil {
 		return "", fmt.Errorf("anthropic API error: %w", err)

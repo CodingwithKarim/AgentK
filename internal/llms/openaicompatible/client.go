@@ -18,7 +18,7 @@ type OpenAIClient struct {
 func (c *OpenAIClient) Chat(chatRequest *types.ChatRequest, contextMessages any) (string, error) {
 	llmResponse, err := c.Client.Chat.Completions.New(
 		context.Background(),
-		buildChatCompletionParams(chatRequest.ModelID, chatRequest.Tokens, contextMessages),
+		buildChatCompletionParams(chatRequest.ModelID, chatRequest.Tokens, chatRequest.SystemPrompt, contextMessages),
 		buildRequestOptions(chatRequest.Provider, c.Key)...)
 
 	if err != nil {
