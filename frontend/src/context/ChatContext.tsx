@@ -53,6 +53,7 @@ type ChatContextType = {
   menuOpen: boolean;
   maxTokens: number;
   mode: "auto" | "custom";
+  systemPrompt: string;
 
   setSelectedSession: (id: string) => void;
   setSelectedModel: (id: string) => void;
@@ -62,6 +63,7 @@ type ChatContextType = {
   setModels: React.Dispatch<React.SetStateAction<Model[]>>
   setMaxTokens: React.Dispatch<React.SetStateAction<number>>
   setMode: React.Dispatch<React.SetStateAction<"auto" | "custom">>
+  setSystemPrompt: React.Dispatch<React.SetStateAction<string>>
 
   handleNewChat: () => Promise<void>;
   handlePickSession: (id: string) => void;
@@ -90,6 +92,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [maxTokens, setMaxTokens] = useState(2048);
   const [mode, setMode] = useState<"auto" | "custom">("auto");
+  const [systemPrompt, setSystemPrompt] = useState<string>("");
 
   const menuRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -406,7 +409,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         selectedModel,
         modelProvider,
         sharedContext,
-        tokens
+        tokens,
+        systemPrompt
       );
 
       const pk = await addMessage({
@@ -533,7 +537,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         selectedModel,
         modelProvider,
         sharedContext,
-        tokens
+        tokens,
+        systemPrompt
       );
 
       const assistantPk = await addMessage({
@@ -603,6 +608,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     sidebarOpen,
     maxTokens,
     mode,
+    systemPrompt,
 
     setSelectedSession,
     setSelectedModel,
@@ -612,6 +618,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setModels,
     setMaxTokens,
     setMode,
+    setSystemPrompt,
 
     handleNewChat,
     handlePickSession,

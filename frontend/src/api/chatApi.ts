@@ -8,7 +8,8 @@ export const sendChatMessage = async (
   modelID: string,
   provider: Provider,
   sharedContext: boolean,
-  tokens: number
+  tokens: number,
+  systemPrompt: string,
 ): Promise<string> => {
   const context = await buildContext(sessionID, modelID, sharedContext);
 
@@ -20,6 +21,7 @@ export const sendChatMessage = async (
       provider,
       context,
       tokens,
+      systemPrompt
     }),
   });
 
