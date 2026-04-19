@@ -54,8 +54,13 @@ const ProviderConfigPanel: React.FC<ProviderConfigPanelProps> = ({
     [models, selected]
   );
 
-  const [draftRows, setDraftRows] = useState<RowDraft[]>(rowsFromModels);
-  useEffect(() => setDraftRows(rowsFromModels), [rowsFromModels]);
+  const [draftRows, setDraftRows] = useState<RowDraft[]>(() =>
+    sortRows(rowsFromModels)
+  );
+
+  useEffect(() => {
+    setDraftRows(sortRows(rowsFromModels));
+  }, [rowsFromModels]);
 
   const filteredRows = useMemo(() => {
     if (!search.trim()) return draftRows;
@@ -101,7 +106,6 @@ const ProviderConfigPanel: React.FC<ProviderConfigPanelProps> = ({
     setDraftRows((prev) => [...prev, { id, alias: id, enabled: true }]);
   }, []);
 
-
   const handleReloadModels = useCallback(async () => {
     const models = await handleRefreshProviderModels(selected);
     setDraftRows(models.map((m) => ({
@@ -112,13 +116,15 @@ const ProviderConfigPanel: React.FC<ProviderConfigPanelProps> = ({
   }, [selected, handleRefreshProviderModels]);
 
   const handleSaveAll = useCallback(async () => {
+    const sortedDraft = sortRows(draftRows);
+
     const updated = models.map((m) => {
       if (m.provider !== selected) return m;
-      const match = draftRows.find((r) => r.id === m.id);
+      const match = sortedDraft.find((r) => r.id === m.id);
       return match ? { ...m, name: match.alias, enabled: match.enabled } : m;
     });
 
-    draftRows.forEach((r) => {
+    sortedDraft.forEach((r) => {
       if (!models.some((m) => m.id === r.id && m.provider === selected)) {
         updated.push({
           id: r.id,
@@ -131,6 +137,8 @@ const ProviderConfigPanel: React.FC<ProviderConfigPanelProps> = ({
 
     setModels(updated);
     await saveAllModels(updated);
+
+    setDraftRows(sortedDraft);
 
     setJustSaved(true);
     setTimeout(() => setJustSaved(false), 1000);
@@ -265,5 +273,14 @@ const ProviderConfigPanel: React.FC<ProviderConfigPanelProps> = ({
     </div>
   );
 };
+
+function sortRows(rows: RowDraft[]) {
+  return [...rows].sort((a, b) => {
+    if (a.enabled !== b.enabled) {
+      return a.enabled ? -1 : 1;
+    }
+    return a.id.localeCompare(b.id);
+  });
+}
 
 export default React.memo(ProviderConfigPanel);
