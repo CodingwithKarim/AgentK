@@ -505,20 +505,16 @@ AgentK gives control back to the user. It turns provider APIs into a practical w
 #### Model Fetching
 - AgentK retrieves all models from provider `/models` endpoints (800+ across 10 providers).
 - It attempts to detect chat-compatible models and disables others by default.
-- Some valid chat models may still be filtered out or fail to work.
-- Provider model metadata is inconsistent, so filtering is best effort only.
 
 #### Context Handling
-- Conversation context is not automatically trimmed or summarized.
 - There is no backend system to detect token limits or manage context size.
 - Users must manually manage context by deleting or resubmitting messages (preferred method).
 
 ---
 
 ### Summary
-
 ⚠ There is no automatic context management. Users must manually trim messages  
-⚠ Model filtering is best effort only and some models may not work as expected
+⚠ Model filtering is best effort only and some models may not work as expected if they aren't chat based models
 
 ---
 
