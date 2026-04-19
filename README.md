@@ -1,5 +1,5 @@
 <h1 align="center">AgentK</h1>
-<p align="center"><i>Your multi-model AI control center</i></p>
+<p align="center"><i>Your fully customizable multi-model AI control center</i></p>
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/eb50ddde-bb35-4e0e-8759-a5e78dc2cedc" alt="AgentK UI"/>
@@ -43,6 +43,7 @@ http://localhost:8080
 - [Features](#features)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
+- [Running with HTTPS](#running-with-https)
 - [API Keys](#api-keys)
 - [Technical Overview](#technical-overview)
 - [Philosophy](#philosophy)
@@ -69,27 +70,28 @@ http://localhost:8080
 ---
 
 #### Model Management
-- Fetch models directly through provider APIs  
-- Reload provider model lists at any time  
-- Enable or disable models for visibility control 
-- Assign custom aliases to any model
-- Manually add missing or custom models
-- Adjust token limits and generation settings per model
+- Fetch models directly from provider APIs & reload model lists from UI 
+- Search and filter models instantly  
+- Enable or disable models for visibility control  
+- Assign custom aliases to any model  
+- Manually add missing or custom models   
+- Bulk enable/disable models (e.g., "Enable All" & "Disable All")
+- Models are dynamically sorted with enabled models shown first
 
 ---
 
-#### Real Time Model Switching
-- Use different providers and models inside the same interface
-- Swap models instantly without leaving the conversation
-- Test prompts across multiple models in a single workflow
+#### Real-Time Model Switching
+- Seamlessly switch between providers and models in a single interface  
+- Swap models instantly without interrupting your conversation  
+- Test and compare prompts across multiple models in one workflow  
 
 ---
 
 #### Conversation Tools
-- Start, switch, rename and delete chat sessions  
-- Compare responses from different models  
-- Delete or resubmit messages to edit conversation context  
-- Customize max completion tokens per request
+- Create, switch, rename, and delete chat sessions  
+- Compare responses across models by resubmitting with a different model  
+- Edit conversation context by deleting or resubmitting messages  
+- Control maximum completion tokens per request
 
 ---
 
@@ -103,9 +105,15 @@ http://localhost:8080
 ---
 
 #### Smart Context Control
-- Choose whether models share the same conversation or stay fully separate
-- Shared mode lets models reference earlier messages and compare responses
-- Isolated mode keeps each model in its own independent conversation
+- Toggle between shared and isolated conversation modes  
+- Shared mode allows models to reference previous messages and compare responses  
+- Isolated mode keeps each model in an independent conversation  
+- Clear context per model or per session as needed
+
+#### System Prompt Customization
+- Define a global system prompt to control model behavior, tone, and response style  
+- Apply consistent instructions across all conversations and models  
+- Easily update the system prompt to experiment with different behaviors  
 
 ---
 
@@ -117,10 +125,12 @@ You can run AgentK using Docker (recommended) or manually.
 Make sure you have:
 - Docker installed
 
-#### Option B — Manual Setup
+#### Option B / C - Manual Setup (Single Server / Development Mode)
 If not using Docker, you'll need:
-- Go
-- Node.js and npm
+- [Go](https://go.dev/)
+- [Node.js](https://nodejs.org/) and [npm](https://www.npmjs.com/) (for frontend build and development)
+- [Caddy](https://caddyserver.com/) (optional, for HTTPS support)
+
 
 ### Environment Variables
 
@@ -149,13 +159,13 @@ OPENROUTER_API_KEY=
 ---
 
 ## Installation
-
-AgentK can be launched in two ways:
+AgentK can be launched in three ways:
 
 | Setup Method  | Best For | Difficulty |
 |----------------|----------------------------|-------------|
 | **Docker (Recommended)** | Fast setup & production use | ⭐ Easy |
-| **Manual (Development Mode)** | Local development & debugging | ⚙️ Medium |
+| **Manual (Single Server)** | Minimal setup with one server running frontend + backend | ⚙️ Easy |
+| **Manual (Development Mode)** | Active frontend/backend development mode with two servers for frontend + backend | 🛠️ Medium |
 
 ---
 
@@ -178,10 +188,7 @@ docker compose up
 
 #### 3️⃣ Open AgentK in your browser and enjoy
 
-```
-http://localhost:8080
-```
-
+[http://localhost:8080](http://localhost:8080)
 
 #### 🔄 (Optional) Rebuild & reset cache
 
@@ -191,11 +198,51 @@ Use this if dependencies change or you update the codebase:
 docker compose up --build
 ```
 
-> Docker automatically runs both the backend and frontend so no manual setup required.
+---
+
+### Option B — Manual Setup (Single Server Mode)
+
+Use this if you want a simple local setup without Docker, while still running a single server.
+
+#### 1️⃣ Clone the repository
+
+```bash
+git clone https://github.com/CodingwithKarim/AgentK.git
+cd AgentK
+```
+
+#### 2️⃣ Download frontend dependencies and build frontend
+
+```bash
+# Navigate back to frontend directory from root AgentK directory
+cd .. frontend
+
+# Install dependencies
+npm install
+
+# Generate a frontend build for backend to serve at root /
+npm run build
+```
+
+#### 3️⃣ Run the backend server
+
+```bash
+# Navigate to root AgentK directory
+cd AgentK
+
+# Run server (will serve frontend at /)
+go run main.go
+```
+
+Then open your browser and enjoy:
+
+[http://localhost:8080](http://localhost:8080)
 
 ---
 
-### Option B — Manual Setup (For Development Purposes)
+### Option C — Manual Setup (Dual Server Mode for Active Development)
+
+Use this for live frontend development with hot reload (Vite) while the Go API runs separately.
 
 #### 1️⃣ Clone the repository
 
@@ -221,9 +268,7 @@ npm run dev
 
 Then open your browser and enjoy:
 
-```
-http://localhost:5173
-```
+[http://localhost:5173](http://localhost:5173)
 
 ---
 
@@ -233,6 +278,95 @@ Before running AgentK, make sure your `.env` file is set up correctly.
 Check the **Environment Variables** section above for details.
 
 > 💡 You only need keys for the providers you actually plan to use.
+
+---
+
+## Running with HTTPS
+AgentK can be served over HTTPS using [Caddy](https://caddyserver.com/), a modern web server that automatically manages & generates TLS certificates. If you plan to use AgentK outside of a home or private network, you must use [Caddy](https://caddyserver.com/) (or another reverse proxy with TLS) to encrypt your data. Otherwise, someone on the same network (e.g., a public café Wi-Fi) could intercept your traffic and view sensitive data such as your API keys.
+
+### Option A - HTTPS with Docker
+
+#### 1️⃣ Start the Docker containers
+```bash
+# Run base app container along with caddy container
+docker compose -f docker-compose.yml -f docker-compose-caddy.yml up
+
+# Copy TLS certificate from Docker container to local computer
+docker cp agentk-caddy:/data/caddy/pki/authorities/local/root.crt .
+```
+
+#### 2️⃣ Install the TLS certificate
+Open and install the `root.crt` certificate to trust it on your system.
+
+Follow common instructions for installing TLS certificate depending on your OS:
+
+- Windows: Run `.\root.crt` or Double-click → Install Certificate → Local Machine → Place all certificates in the following store → Trusted Root Certification Authorities
+- macOS: Open Keychain Access → import → set to “Always Trust”
+- Linux: Move the certificate and update trust store:
+```bash
+sudo cp root.crt /usr/local/share/ca-certificates/
+sudo update-ca-certificates
+```
+
+> If you struggle with this section, you can easily Google or use AI to complete this step (just send this entire section to AI and it will guide you)
+
+Then open your browser and enjoy:
+
+[https://localhost](https://localhost)
+
+### Option B - HTTPS with Manual Setup
+
+#### 1️⃣ Install [Caddy](https://caddyserver.com/)
+Download and install [Caddy](https://caddyserver.com/download) for your system. You can also use a package manager if available to you.
+
+```bash
+# macOS (Homebrew)
+brew install caddy
+
+# Linux (Debian/Ubuntu)
+sudo apt install caddy
+``` 
+
+#### 2️⃣ Run Caddy Server
+Navigate to where Caddy Server file is located and run the server (assuming you are in AgentK directory).
+
+```bash
+# Windows
+caddy run or .\caddy run
+
+# macOS or Linux
+./caddy run
+```
+
+If Caddy is run from the same directory as the `Caddyfile`, it will be detected automatically. If running from a different directory, specify the config file:
+```bash
+# e.g:
+caddy run --config C:\code\AgentK\Caddyfile
+```
+
+> It is recommended to add Caddy to your system PATH so you can run it from any directory including the AgentK root directory.
+
+#### 3️⃣ Continue with Manual Setup like normal (see above for full instructions)
+
+Single Server Mode
+```bash
+npm install
+npm run build
+
+go run main.go
+```
+
+Development Mode
+```bash
+npm install
+npm run dev
+
+go run main.go
+```
+
+Then open your browser and enjoy:
+
+[https://localhost](https://localhost)
 
 ---
 
@@ -400,7 +534,7 @@ Pull model IDs from any of these sources:
 - 🔹 [OpenRouter Models](https://openrouter.ai/models)  
 - 🔹 [DeepInfra Models](https://deepinfra.com/models)  
 - 🔹 [Hugging Face Models](https://huggingface.co/models?inference_provider=all)
-- 🔹 [Hugging Face Inference Providers](https://huggingface.co/docs/inference-providers/index)  
+- 🔹 [Hugging Face Cloud Inference Providers](https://huggingface.co/docs/inference-providers/index)  
 
 ---
 
