@@ -57,7 +57,7 @@ func main() {
 		}
 	}()
 
-	log.Println("AgentK Server started on port 8080")
+	log.Println("AgentK running at http://localhost:8080")
 
 	shutdownChannel := make(chan os.Signal, 1)
 	signal.Notify(shutdownChannel, syscall.SIGINT, syscall.SIGTERM)
