@@ -1,6 +1,6 @@
 module github.com/CodingWithKarim/AgentK
 
-go 1.24.2
+go 1.26
 
 require github.com/openai/openai-go v1.12.0
 

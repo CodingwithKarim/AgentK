@@ -1,6 +1,7 @@
 package chatservice
 
 import (
+	"fmt"
 	"log"
 	"sync"
 
@@ -45,12 +46,8 @@ func GetAllModels() []*types.Model {
 	syncGroup := sync.WaitGroup{}
 
 	for provider, LLMClient := range llms.Clients {
-		syncGroup.Add(1)
-
-		go func(provider types.Provider) {
-			defer syncGroup.Done()
-
-			models, err := LLMClient.Models()
+		syncGroup.Go(func() {
+			models, err := getProviderModels(provider, LLMClient)
 
 			if err != nil {
 				log.Printf("failed to get models for provider=%q err=%v", provider, err)
@@ -60,8 +57,7 @@ func GetAllModels() []*types.Model {
 			if len(models) > 0 {
 				channel <- models
 			}
-
-		}(provider)
+		})
 	}
 
 	go func() {
@@ -92,5 +88,14 @@ func ReloadProviderModels(provider types.Provider) ([]*types.Model, error) {
 		return nil, err
 	}
 
+	return models, nil
+}
+
+func getProviderModels(provider types.Provider, client llms.LLMClient) ([]*types.Model, error) {
+	models, err := client.Models()
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get models for provider=%q: %v", provider, err)
+	}
 	return models, nil
 }
